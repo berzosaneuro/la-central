@@ -281,12 +281,12 @@ const LoginScreen = ({go}: {go: () => void}) => {
   return (
     <div style={{width:"100%",height:"100%",background:"#000308",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
       {/* TITULO EL JEFAZO */}
-      <div style={{animation:"fadeUp 0.4s ease-out",marginBottom:10,textAlign:"center"}}>
-        <div style={{fontSize:42,fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.12em",lineHeight:1,
-          background:`linear-gradient(180deg, #C0F4FF 0%, #60E8FF 30%, #00C8FF 50%, #0080CC 75%, #004488 100%)`,
-          WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",
-          filter:"drop-shadow(0 0 20px rgba(0,200,255,0.6)) drop-shadow(0 2px 4px rgba(0,0,0,0.8))",
+      <div style={{animation:"fadeUp 0.4s ease-out",marginBottom:12,textAlign:"center"}}>
+        <div style={{fontSize:44,fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.14em",lineHeight:1,
+          color:"#00D4FF",
+          textShadow:"0 0 30px rgba(0,200,255,0.8), 0 0 60px rgba(0,200,255,0.5), 0 0 100px rgba(0,150,255,0.3), 0 2px 4px rgba(0,0,0,0.9)",
         }}>EL JEFAZO</div>
+        <div style={{marginTop:4,fontSize:11,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.35em",color:"#0088BB",textShadow:"0 0 10px rgba(0,150,255,0.4)"}}>MASTER CONTROL SYSTEM</div>
       </div>
       <div style={{width:"92%",maxWidth:400,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both"}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -778,7 +778,7 @@ export default function JefazoOS() {
 
   const onEmergency = useCallback(() => { setGs(p => ({ ...p, emergency: !p.emergency })); show(gs.emergency ? "Emergencia OFF" : "Emergencia ON"); }, [gs.emergency, show]);
 
-  // ── RENDER ───────────────────────────────────────────────
+  // ── RENDER ──��────────────────────────────────────────────
   const currentClone = scrArg ? clones.find(c => c.id === scrArg) : undefined;
   const showQA = scr !== "login";
 
