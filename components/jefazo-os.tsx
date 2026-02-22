@@ -271,8 +271,10 @@ const LoginScreen = ({go}: {go: () => void}) => {
   const [u,setU]=useState("");const [pw,setPw]=useState("");
   const [loading,setLoading]=useState(false);const [granted,setGranted]=useState(false);
   const [error,setError]=useState("");
-  const doLogin=()=>{
+  const doLogin=(e?: React.FormEvent)=>{
+    if(e)e.preventDefault();
     if(loading)return;
+    console.log("[v0] Login attempt - user:", JSON.stringify(u), "pass:", JSON.stringify(pw));
     if(u.trim().toLowerCase()!=="el jefazo"||pw!=="berzosa15031980"){
       setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
     }
@@ -318,8 +320,8 @@ const LoginScreen = ({go}: {go: () => void}) => {
           <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>SYSTEM IDENTIFICATION</div>
         </div>
 
-        <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>setU(e.target.value)}/>
-        <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
+        <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>{console.log("[v0] user input:",e.target.value);setU(e.target.value)}}/>
+        <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>{console.log("[v0] pw input:",e.target.value);setPw(e.target.value)}}/>
 
         {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
 
