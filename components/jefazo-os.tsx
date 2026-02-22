@@ -261,9 +261,9 @@ const QuickActions = ({onSync,onUpdate,onExport,onImport,onEmergency,emergency}:
 // ═══════════════════════════════════════════════════════════════
 const LoginInput = ({placeholder,type="text",value,onChange}: {placeholder?: string; type?: string; value?: string; onChange?: React.ChangeEventHandler<HTMLInputElement>}) => {
   const [f,setF]=useState(false);
-  return <div style={{borderRadius:10,padding:1.5,background:f?`linear-gradient(90deg,${T.neon}00,${T.electric}bb,${T.neonBright},${T.electric}bb,${T.neon}00)`:`linear-gradient(90deg,${T.neon}44,${T.electric}66,${T.neon}44)`,backgroundSize:f?"200% 100%":"100% 100%",animation:f?"neonSweep 2.5s linear infinite":"none",boxShadow:f?`0 0 16px ${T.neon}55`:`0 0 8px ${T.neon}18`,transition:"box-shadow 0.3s"}}>
+  return <div style={{borderRadius:8,padding:1.5,background:f?`linear-gradient(90deg,${T.neon}00,${T.electric}bb,${T.neonBright},${T.electric}bb,${T.neon}00)`:`linear-gradient(90deg,${T.neon}55,${T.electric}77,${T.neonBright}88,${T.electric}77,${T.neon}55)`,backgroundSize:f?"200% 100%":"100% 100%",animation:f?"neonSweep 2.5s linear infinite":"none",boxShadow:f?`0 0 18px ${T.neon}55`:`0 0 10px ${T.neon}22`,transition:"box-shadow 0.3s"}}>
     <input type={type} placeholder={placeholder} value={value} onChange={onChange} onFocus={()=>setF(true)} onBlur={()=>setF(false)}
-      style={{width:"100%",height:44,background:"#060E1C",border:"none",borderRadius:8.5,color:T.white,fontSize:14,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.1em",padding:"0 16px",outline:"none"}}/>
+      style={{width:"100%",height:"5.5vh",minHeight:38,maxHeight:48,background:"rgba(6,14,28,0.95)",border:"none",borderRadius:6.5,color:T.white,fontSize:"clamp(13px, 2vh, 16px)",fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.12em",padding:"0 16px",outline:"none"}}/>
   </div>;
 };
 
@@ -279,38 +279,91 @@ const LoginScreen = ({go}: {go: () => void}) => {
     setLoading(true);setTimeout(()=>{setGranted(true);setTimeout(()=>go(),1800)},1500);
   };
   return (
-    <div style={{width:"100%",height:"100%",background:"#000308",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative",padding:"2vh 0"}}>
-      {/* TITULO EL JEFAZO */}
-      <div style={{animation:"fadeUp 0.4s ease-out",marginBottom:"1.5vh",textAlign:"center",flexShrink:0}}>
-        <div style={{fontSize:"clamp(24px, 7vw, 42px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.14em",lineHeight:1,
-          color:"#00D4FF",
-          textShadow:"0 0 30px rgba(0,200,255,0.8), 0 0 60px rgba(0,200,255,0.5), 0 0 100px rgba(0,150,255,0.3), 0 2px 4px rgba(0,0,0,0.9)",
+    <div style={{width:"100%",height:"100%",background:"radial-gradient(ellipse at 50% 30%, #021840 0%, #000a1a 40%, #000308 70%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",overflow:"hidden",position:"relative",padding:"4vh 0 3vh"}}>
+      {/* Lightning background effect */}
+      <div style={{position:"absolute",inset:0,pointerEvents:"none",
+        background:"radial-gradient(ellipse at 20% 10%, rgba(0,100,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 15%, rgba(0,150,255,0.06) 0%, transparent 40%)",
+        zIndex:0}}/>
+
+      {/* TITULO EL JEFAZO - Chrome/Metal 3D style */}
+      <div style={{animation:"fadeUp 0.4s ease-out",textAlign:"center",flexShrink:0,zIndex:1}}>
+        <div style={{
+          fontSize:"clamp(36px, 11vw, 56px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",lineHeight:1,
+          color:"#B8E4F8",
+          textShadow:`
+            0 1px 0 #80C8E8,
+            0 2px 0 #60A8D0,
+            0 3px 0 #4090B8,
+            0 4px 0 #2878A0,
+            0 5px 10px rgba(0,0,0,0.9),
+            0 0 40px rgba(0,150,255,0.5),
+            0 0 80px rgba(0,120,255,0.3),
+            0 -1px 2px rgba(200,240,255,0.4)
+          `,
         }}>EL JEFAZO</div>
-        <div style={{marginTop:2,fontSize:10,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.35em",color:"#0088BB",textShadow:"0 0 10px rgba(0,150,255,0.4)"}}>MASTER CONTROL SYSTEM</div>
       </div>
-      <div style={{width:"75%",maxWidth:320,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0}}>
+
+      {/* BUGATTI */}
+      <div style={{width:"88%",maxWidth:380,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0,zIndex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",maxHeight:"25vh",objectFit:"cover",display:"block",borderRadius:10,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
-        <div style={{position:"absolute",bottom:0,left:0,right:0,height:"25%",borderRadius:"0 0 10px 10px",background:"linear-gradient(transparent,#000308)"}}/>
+        <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",maxHeight:"32vh",objectFit:"contain",display:"block",filter:"brightness(1.15) contrast(1.1) saturate(1.15)",transform:"scaleX(-1)",
+          WebkitMaskImage:"radial-gradient(ellipse at 50% 50%, black 60%, transparent 85%)",maskImage:"radial-gradient(ellipse at 50% 50%, black 60%, transparent 85%)"}}/>
+        {/* Glow under car */}
+        <div style={{position:"absolute",bottom:"-5%",left:"10%",right:"10%",height:"30%",background:"radial-gradient(ellipse at 50% 100%, rgba(0,120,255,0.2) 0%, transparent 70%)",pointerEvents:"none"}}/>
       </div>
-      <div style={{width:"80%",maxWidth:340,display:"flex",flexDirection:"column",gap:8,animation:"fadeUp 0.6s ease-out 0.2s both",marginTop:"1.5vh",flexShrink:0}}>
+
+      {/* LOGIN FORM SECTION */}
+      <div style={{width:"85%",maxWidth:360,display:"flex",flexDirection:"column",gap:"1.2vh",animation:"fadeUp 0.6s ease-out 0.2s both",flexShrink:0,zIndex:1}}>
+        {/* SYSTEM IDENTIFICATION label */}
+        <div style={{textAlign:"center",marginBottom:"0.5vh"}}>
+          <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>SYSTEM IDENTIFICATION</div>
+        </div>
+
         <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>setU(e.target.value)}/>
-        <LoginInput placeholder="CONTRASENA" type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
-      </div>
-      {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",marginTop:6,textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out",flexShrink:0}}>{error}</div>}
-      <div style={{width:"80%",maxWidth:340,animation:"fadeUp 0.6s ease-out 0.35s both",marginTop:error?6:10,flexShrink:0}}>
-        <div style={{borderRadius:10,padding:1.5,overflow:"hidden",background:loading?`linear-gradient(90deg,${T.neonBright},${T.electric},${T.neonBright})`:`linear-gradient(90deg,${T.neon}00,${T.electric}88,${T.neonBright},${T.electric}88,${T.neon}00)`,backgroundSize:loading?"100% 100%":"400% 100%",animation:loading?"loadGlow 1s ease-in-out infinite":"neonSweep 3s linear infinite",boxShadow:loading?`0 0 22px ${T.neon}66`:`0 0 14px ${T.neon}33`}}>
-          <button onClick={doLogin} style={{width:"100%",height:44,position:"relative",overflow:"hidden",background:"#0C1E3A",border:"none",borderRadius:8.5,color:T.neonBright,fontSize:16,fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.18em",cursor:loading?"default":"pointer",textShadow:`0 0 14px ${T.neon}88`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            {loading?<div style={{display:"flex",alignItems:"center",gap:10,width:"80%"}}><div style={{flex:1,height:4,background:"rgba(0,20,60,0.6)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,background:`linear-gradient(90deg,${T.neon},${T.neonBright},#fff)`,animation:"loadBar 1.5s ease-in-out forwards",boxShadow:`0 0 8px ${T.neon}`}}/></div><span style={{fontSize:12,letterSpacing:2,opacity:0.7}}>{"›››››"}</span></div>:"ENTRAR"}
-          </button>
+        <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
+
+        {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
+
+        {/* ENTRAR BUTTON - Big neon glow like the reference */}
+        <div style={{marginTop:"0.5vh"}}>
+          <div style={{borderRadius:10,padding:2,overflow:"hidden",
+            background:loading
+              ?`linear-gradient(90deg,${T.neonBright},${T.electric},${T.neonBright})`
+              :`linear-gradient(90deg,${T.neon},${T.electric},${T.neonBright},${T.electric},${T.neon})`,
+            backgroundSize:loading?"100% 100%":"300% 100%",
+            animation:loading?"loadGlow 1s ease-in-out infinite":"neonSweep 3s linear infinite",
+            boxShadow:loading
+              ?`0 0 30px ${T.neon}88, 0 0 60px ${T.neon}44`
+              :`0 0 20px ${T.neon}55, 0 0 40px ${T.neon}22, inset 0 0 20px ${T.neon}11`}}>
+            <button onClick={doLogin} style={{
+              width:"100%",height:"6vh",minHeight:44,maxHeight:56,position:"relative",overflow:"hidden",
+              background:"linear-gradient(180deg, #0A2844 0%, #061830 50%, #040E20 100%)",
+              border:"none",borderRadius:8,
+              color:T.neonBright,fontSize:"clamp(16px, 2.5vh, 22px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.2em",
+              cursor:loading?"default":"pointer",
+              textShadow:`0 0 20px ${T.neon}, 0 0 40px ${T.neon}88`,
+              display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {loading?<div style={{display:"flex",alignItems:"center",gap:10,width:"80%"}}><div style={{flex:1,height:4,background:"rgba(0,20,60,0.6)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,background:`linear-gradient(90deg,${T.neon},${T.neonBright},#fff)`,animation:"loadBar 1.5s ease-in-out forwards",boxShadow:`0 0 8px ${T.neon}`}}/></div><span style={{fontSize:12,letterSpacing:2,opacity:0.7}}>{">>>>"}</span></div>:"ENTRAR"}
+            </button>
+          </div>
+        </div>
+
+        {/* Footer text */}
+        <div style={{textAlign:"center",marginTop:"0.5vh"}}>
+          <div style={{fontSize:8,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.3em",color:"#2A5070",textTransform:"uppercase"}}>SECURE BIOMETRIC CONNECTION v5.0</div>
         </div>
       </div>
-      {granted&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,background:"rgba(0,5,15,0.55)",animation:"greenFlash 1.8s ease-out forwards"}}>
+
+      {/* ACCESO CONCEDIDO overlay */}
+      {granted&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,background:"rgba(0,5,15,0.7)",animation:"greenFlash 1.8s ease-out forwards"}}>
         <div style={{textAlign:"center",animation:"accessPulse 1s ease-out forwards"}}>
-          <div style={{fontSize:38,fontWeight:900,fontFamily:"'Orbitron',sans-serif",color:"#00FF80",letterSpacing:"0.08em",lineHeight:1.2,textShadow:"0 0 30px rgba(0,255,120,0.9),0 0 60px rgba(0,255,80,0.6)"}}>ACCESO</div>
-          <div style={{fontSize:46,fontWeight:900,fontFamily:"'Orbitron',sans-serif",color:"#00FF80",letterSpacing:"0.06em",lineHeight:1.2,textShadow:"0 0 30px rgba(0,255,120,0.9),0 0 60px rgba(0,255,80,0.6)"}}>CONCEDIDO</div>
+          <div style={{fontSize:"clamp(30px, 8vw, 42px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",color:"#00FF80",letterSpacing:"0.08em",lineHeight:1.2,textShadow:"0 0 30px rgba(0,255,120,0.9),0 0 60px rgba(0,255,80,0.6),0 0 100px rgba(0,255,80,0.3)"}}>ACCESO</div>
+          <div style={{fontSize:"clamp(38px, 10vw, 52px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",color:"#00FF80",letterSpacing:"0.06em",lineHeight:1.2,textShadow:"0 0 30px rgba(0,255,120,0.9),0 0 60px rgba(0,255,80,0.6),0 0 100px rgba(0,255,80,0.3)"}}>CONCEDIDO</div>
         </div>
       </div>}
+
+      {/* Outer border glow like the reference */}
+      <div style={{position:"absolute",inset:8,border:"1.5px solid rgba(0,150,255,0.15)",borderRadius:20,pointerEvents:"none",boxShadow:"inset 0 0 30px rgba(0,100,255,0.05), 0 0 20px rgba(0,100,255,0.05)"}}/>
     </div>
   );
 };
@@ -618,7 +671,7 @@ const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) =>
 
 // ═══════════════════════════════════════════════════════════════
 // COMPARTIR / QR SCREEN
-// ═════════════════════════════════════════════════════════��═════
+// ══���══════════════════════════════════════════════════════��═════
 const ShareQR = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
   const [url,setUrl]=useState(()=>LS.get("share_url","https://eljefazo.vercel.app") as string);
   useEffect(()=>{LS.set("share_url",url)},[url]);
