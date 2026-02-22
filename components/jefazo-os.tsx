@@ -155,8 +155,8 @@ const Btn = ({children,onClick,primary=true,w="100%",h=48,neon=true,glow=1,fs=12
       style={{width:"100%",height:h,position:"relative",overflow:"hidden",border:`1.5px solid ${bc}${primary||danger||success?"88":""}`,borderRadius:12,opacity:disabled?0.4:1,
         background:primary||danger||success?`linear-gradient(180deg,${bg2} 0%,${bg} 40%,${T.dark} 100%)`:"linear-gradient(180deg,rgba(15,30,55,0.4) 0%,rgba(5,12,24,0.6) 100%)",
         color:tc,fontSize:fs,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.14em",cursor:disabled?"not-allowed":"pointer",
-        transform:pr?"scale(0.95) translateY(2px)":hov?"scale(1.01) translateY(-1px)":"scale(1)",transition:"all 0.15s cubic-bezier(0.34,1.56,0.64,1)",
-        boxShadow:(primary||danger||success)&&!disabled?pr?`0 1px 4px #000c`:`0 4px 16px #000a,0 0 ${hov?20:8}px ${bc}1a`:"none",
+        transform:pr?"scale(0.96) translateY(2px)":hov?"scale(1.02) translateY(-2px)":"scale(1)",transition:"all 0.15s cubic-bezier(0.34,1.56,0.64,1)",
+        boxShadow:(primary||danger||success)&&!disabled?pr?`0 1px 4px #000c, inset 0 1px 2px rgba(0,0,0,0.3)`:`0 4px 16px #000a, 0 0 ${hov?24:10}px ${bc}1a, inset 0 1px 0 rgba(255,255,255,0.05)`:`0 2px 8px #0006`,
         textShadow:`0 0 12px ${tc}66`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
       {hov&&!disabled&&<div style={{position:"absolute",inset:0,background:`linear-gradient(90deg,transparent 30%,rgba(0,200,255,0.04) 50%,transparent 70%)`,backgroundSize:"200% 100%",animation:"shimmer 2.5s ease-in-out infinite"}}/>}
       {icon&&<span style={{fontSize:fs+4,lineHeight:1}}>{icon}</span>}{children}
@@ -169,7 +169,7 @@ const Btn = ({children,onClick,primary=true,w="100%",h=48,neon=true,glow=1,fs=12
 const Card = ({children,neon=false,glow=0.5,style:sx={},neonColor}: {children: React.ReactNode; neon?: boolean; glow?: number; style?: React.CSSProperties; neonColor?: string}) => {
   const inner=<div style={{padding:16,...sx}}>{children}</div>;
   if(neon) return <NeonBorder on r={16} glow={glow} color={neonColor}>{inner}</NeonBorder>;
-  return <div style={{padding:16,background:`linear-gradient(145deg,${T.bgCardLight},${T.bgCard})`,borderRadius:16,border:`1px solid ${T.border}44`,boxShadow:`0 2px 12px ${T.neon}08`,animation:"borderGlow 4.5s ease-in-out infinite",...sx}}>{children}</div>;
+  return <div style={{padding:16,background:`linear-gradient(145deg,${T.bgCardLight},${T.bgCard})`,borderRadius:16,border:`1px solid ${T.border}44`,boxShadow:`0 4px 16px rgba(0,0,0,0.4), 0 2px 12px ${T.neon}08, inset 0 1px 0 rgba(255,255,255,0.03)`,animation:"borderGlow 4.5s ease-in-out infinite",...sx}}>{children}</div>;
 };
 
 const InputField = ({placeholder,type="text",value,onChange,style:sx={}}: {placeholder?: string; type?: string; value?: string; onChange?: React.ChangeEventHandler<HTMLInputElement>; style?: React.CSSProperties}) => {
@@ -179,8 +179,8 @@ const InputField = ({placeholder,type="text",value,onChange,style:sx={}}: {place
 };
 
 const Toggle = ({on,set}: {on: boolean; set: (v: boolean) => void}) => (
-  <div onClick={()=>set(!on)} style={{width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",flexShrink:0,background:on?`linear-gradient(135deg,#0060CC,${T.neon})`:`linear-gradient(135deg,#0A1520,#0A1828)`,border:`1.5px solid ${on?T.neon+"66":T.border+"55"}`,boxShadow:on?`0 0 14px ${T.neon}44`:"inset 0 2px 6px #0008",transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}>
-    <div style={{width:20,height:20,borderRadius:"50%",position:"absolute",top:2.5,left:on?26:3,background:on?"radial-gradient(circle at 35% 30%,#fff,#90E0FF)":"radial-gradient(circle at 35% 30%,#445566,#223344)",boxShadow:on?`0 0 8px ${T.neon}88`:"0 2px 4px #0008",transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+  <div onClick={()=>set(!on)} style={{width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",flexShrink:0,background:on?`linear-gradient(135deg,#0060CC,${T.neon})`:`linear-gradient(135deg,#0A1520,#0A1828)`,border:`1.5px solid ${on?T.neon+"66":T.border+"55"}`,boxShadow:on?`0 2px 8px rgba(0,0,0,0.3), 0 0 14px ${T.neon}44`:"inset 0 2px 6px #0008, 0 2px 4px rgba(0,0,0,0.2)",transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}>
+    <div style={{width:20,height:20,borderRadius:"50%",position:"absolute",top:2.5,left:on?26:3,background:on?"radial-gradient(circle at 35% 30%,#fff,#90E0FF)":"radial-gradient(circle at 35% 30%,#445566,#223344)",boxShadow:on?`0 2px 6px rgba(0,0,0,0.3), 0 0 8px ${T.neon}88`:"0 2px 4px #0008",transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}/>
   </div>
 );
 
@@ -271,15 +271,16 @@ const LoginScreen = ({go}: {go: () => void}) => {
   const [u,setU]=useState("");const [pw,setPw]=useState("");
   const [loading,setLoading]=useState(false);const [granted,setGranted]=useState(false);
   const [error,setError]=useState("");
-  const doLogin=(e?: React.FormEvent)=>{
-    if(e)e.preventDefault();
+  const doLogin=()=>{
     if(loading)return;
-    console.log("[v0] Login attempt - user:", JSON.stringify(u), "pass:", JSON.stringify(pw));
-    if(u.trim().toLowerCase()!=="el jefazo"||pw!=="berzosa15031980"){
+    const userOk=u.trim().toLowerCase()==="el jefazo";
+    const passOk=pw==="berzosa15031980";
+    if(!userOk||!passOk){
       setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
     }
     setLoading(true);setTimeout(()=>{setGranted(true);setTimeout(()=>go(),1800)},1500);
   };
+  const handleSubmit=(e: React.FormEvent)=>{e.preventDefault();doLogin();};
   return (
     <div style={{width:"100%",height:"100%",background:"radial-gradient(ellipse at 50% 30%, #021840 0%, #000a1a 40%, #000308 70%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",overflow:"hidden",position:"relative",padding:"4vh 0 3vh"}}>
       {/* Lightning background effect */}
@@ -287,7 +288,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
         background:"radial-gradient(ellipse at 20% 10%, rgba(0,100,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 15%, rgba(0,150,255,0.06) 0%, transparent 40%)",
         zIndex:0}}/>
 
-      {/* TITULO EL JEFAZO - Chrome/Silver metal like the reference photo */}
+      {/* TITULO EL JEFAZO - Chrome/Silver metal 3D like the reference photo */}
       <div style={{animation:"fadeUp 0.4s ease-out",textAlign:"center",flexShrink:0,zIndex:1}}>
         <div style={{
           fontSize:"clamp(36px, 11vw, 56px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",lineHeight:1,
@@ -306,22 +307,21 @@ const LoginScreen = ({go}: {go: () => void}) => {
         }}>EL JEFAZO</div>
       </div>
 
-      {/* BUGATTI - same size as original, just flipped */}
+      {/* BUGATTI - original size, just flipped */}
       <div style={{width:"92%",maxWidth:400,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0,zIndex:1}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",height:"auto",display:"block",borderRadius:12,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
-        <div style={{position:"absolute",bottom:0,left:0,right:0,height:"25%",borderRadius:"0 0 12px 12px",background:"linear-gradient(transparent,#000308)"}}/>
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:"25%",borderRadius:"0 0 12px 12px",background:"linear-gradient(transparent,#000a1a)"}}/>
       </div>
 
-      {/* LOGIN FORM SECTION */}
-      <div style={{width:"85%",maxWidth:360,display:"flex",flexDirection:"column",gap:"1.2vh",animation:"fadeUp 0.6s ease-out 0.2s both",flexShrink:0,zIndex:1}}>
-        {/* SYSTEM IDENTIFICATION label */}
+      {/* LOGIN FORM - wrapped in form for Enter key support */}
+      <form onSubmit={handleSubmit} style={{width:"85%",maxWidth:360,display:"flex",flexDirection:"column",gap:"1.2vh",animation:"fadeUp 0.6s ease-out 0.2s both",flexShrink:0,zIndex:1}}>
         <div style={{textAlign:"center",marginBottom:"0.5vh"}}>
           <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>SYSTEM IDENTIFICATION</div>
         </div>
 
-        <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>{console.log("[v0] user input:",e.target.value);setU(e.target.value)}}/>
-        <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>{console.log("[v0] pw input:",e.target.value);setPw(e.target.value)}}/>
+        <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>setU(e.target.value)}/>
+        <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
 
         {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
 
@@ -336,7 +336,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
             boxShadow:loading
               ?`0 0 30px ${T.neon}88, 0 0 60px ${T.neon}44`
               :"0 0 15px rgba(150,180,210,0.2), 0 0 30px rgba(100,140,180,0.1)"}}>
-            <button onClick={doLogin} style={{
+            <button type="submit" style={{
               width:"100%",height:"6vh",minHeight:44,maxHeight:56,position:"relative",overflow:"hidden",
               background:"linear-gradient(180deg, #B0BCC8 0%, #8898A8 20%, #607080 50%, #485868 80%, #384858 100%)",
               border:"none",borderRadius:8,
@@ -353,7 +353,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
         <div style={{textAlign:"center",marginTop:"0.5vh"}}>
           <div style={{fontSize:8,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.3em",color:"#2A5070",textTransform:"uppercase"}}>SECURE BIOMETRIC CONNECTION v5.0</div>
         </div>
-      </div>
+      </form>
 
       {/* ACCESO CONCEDIDO overlay */}
       {granted&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,background:"rgba(0,5,15,0.7)",animation:"greenFlash 1.8s ease-out forwards"}}>
@@ -363,7 +363,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
         </div>
       </div>}
 
-      {/* Outer border glow like the reference */}
+      {/* Outer border glow */}
       <div style={{position:"absolute",inset:8,border:"1.5px solid rgba(0,150,255,0.15)",borderRadius:20,pointerEvents:"none",boxShadow:"inset 0 0 30px rgba(0,100,255,0.05), 0 0 20px rgba(0,100,255,0.05)"}}/>
     </div>
   );
