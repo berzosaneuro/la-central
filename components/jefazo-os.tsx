@@ -285,31 +285,30 @@ const LoginScreen = ({go}: {go: () => void}) => {
         background:"radial-gradient(ellipse at 20% 10%, rgba(0,100,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 15%, rgba(0,150,255,0.06) 0%, transparent 40%)",
         zIndex:0}}/>
 
-      {/* TITULO EL JEFAZO - Chrome/Metal 3D style */}
+      {/* TITULO EL JEFAZO - Chrome/Silver metal like the reference photo */}
       <div style={{animation:"fadeUp 0.4s ease-out",textAlign:"center",flexShrink:0,zIndex:1}}>
         <div style={{
           fontSize:"clamp(36px, 11vw, 56px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",lineHeight:1,
-          color:"#B8E4F8",
+          color:"#D8DDE4",
           textShadow:`
-            0 1px 0 #80C8E8,
-            0 2px 0 #60A8D0,
-            0 3px 0 #4090B8,
-            0 4px 0 #2878A0,
-            0 5px 10px rgba(0,0,0,0.9),
-            0 0 40px rgba(0,150,255,0.5),
-            0 0 80px rgba(0,120,255,0.3),
-            0 -1px 2px rgba(200,240,255,0.4)
+            0 1px 0 #C0C4CC,
+            0 2px 0 #A8ACB4,
+            0 3px 0 #90949C,
+            0 4px 0 #787C84,
+            0 5px 0 #60646C,
+            0 6px 12px rgba(0,0,0,0.95),
+            0 0 30px rgba(180,200,220,0.25),
+            0 0 60px rgba(100,140,180,0.15),
+            0 -1px 2px rgba(255,255,255,0.35)
           `,
         }}>EL JEFAZO</div>
       </div>
 
-      {/* BUGATTI */}
-      <div style={{width:"88%",maxWidth:380,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0,zIndex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      {/* BUGATTI - same size as original, just flipped */}
+      <div style={{width:"92%",maxWidth:400,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0,zIndex:1}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",maxHeight:"32vh",objectFit:"contain",display:"block",filter:"brightness(1.15) contrast(1.1) saturate(1.15)",transform:"scaleX(-1)",
-          WebkitMaskImage:"radial-gradient(ellipse at 50% 50%, black 60%, transparent 85%)",maskImage:"radial-gradient(ellipse at 50% 50%, black 60%, transparent 85%)"}}/>
-        {/* Glow under car */}
-        <div style={{position:"absolute",bottom:"-5%",left:"10%",right:"10%",height:"30%",background:"radial-gradient(ellipse at 50% 100%, rgba(0,120,255,0.2) 0%, transparent 70%)",pointerEvents:"none"}}/>
+        <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",height:"auto",display:"block",borderRadius:12,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:"25%",borderRadius:"0 0 12px 12px",background:"linear-gradient(transparent,#000308)"}}/>
       </div>
 
       {/* LOGIN FORM SECTION */}
@@ -324,24 +323,24 @@ const LoginScreen = ({go}: {go: () => void}) => {
 
         {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
 
-        {/* ENTRAR BUTTON - Big neon glow like the reference */}
+        {/* ENTRAR BUTTON - Metallic silver/chrome like second reference photo */}
         <div style={{marginTop:"0.5vh"}}>
           <div style={{borderRadius:10,padding:2,overflow:"hidden",
             background:loading
               ?`linear-gradient(90deg,${T.neonBright},${T.electric},${T.neonBright})`
-              :`linear-gradient(90deg,${T.neon},${T.electric},${T.neonBright},${T.electric},${T.neon})`,
+              :"linear-gradient(90deg, #405060, #8090A0, #C0CCD8, #8090A0, #405060)",
             backgroundSize:loading?"100% 100%":"300% 100%",
-            animation:loading?"loadGlow 1s ease-in-out infinite":"neonSweep 3s linear infinite",
+            animation:loading?"loadGlow 1s ease-in-out infinite":"neonSweep 4s linear infinite",
             boxShadow:loading
               ?`0 0 30px ${T.neon}88, 0 0 60px ${T.neon}44`
-              :`0 0 20px ${T.neon}55, 0 0 40px ${T.neon}22, inset 0 0 20px ${T.neon}11`}}>
+              :"0 0 15px rgba(150,180,210,0.2), 0 0 30px rgba(100,140,180,0.1)"}}>
             <button onClick={doLogin} style={{
               width:"100%",height:"6vh",minHeight:44,maxHeight:56,position:"relative",overflow:"hidden",
-              background:"linear-gradient(180deg, #0A2844 0%, #061830 50%, #040E20 100%)",
+              background:"linear-gradient(180deg, #B0BCC8 0%, #8898A8 20%, #607080 50%, #485868 80%, #384858 100%)",
               border:"none",borderRadius:8,
-              color:T.neonBright,fontSize:"clamp(16px, 2.5vh, 22px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.2em",
+              color:"#E8F0F8",fontSize:"clamp(16px, 2.5vh, 22px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.2em",
               cursor:loading?"default":"pointer",
-              textShadow:`0 0 20px ${T.neon}, 0 0 40px ${T.neon}88`,
+              textShadow:"0 1px 0 rgba(255,255,255,0.3), 0 -1px 0 rgba(0,0,0,0.5), 0 0 15px rgba(180,210,240,0.4)",
               display:"flex",alignItems:"center",justifyContent:"center"}}>
               {loading?<div style={{display:"flex",alignItems:"center",gap:10,width:"80%"}}><div style={{flex:1,height:4,background:"rgba(0,20,60,0.6)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,background:`linear-gradient(90deg,${T.neon},${T.neonBright},#fff)`,animation:"loadBar 1.5s ease-in-out forwards",boxShadow:`0 0 8px ${T.neon}`}}/></div><span style={{fontSize:12,letterSpacing:2,opacity:0.7}}>{">>>>"}</span></div>:"ENTRAR"}
             </button>
@@ -740,7 +739,7 @@ const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renov
 // MAIN APP
 // ═══════════════════════════════════════════════════════════════
 export default function JefazoOS() {
-  // ── STATE ────────────────────────────────────────────────
+  // ── STATE ���───────────────────────────────────────────────
   const [scr, setScr] = useState("login");
   const [scrArg, setScrArg] = useState<string | null>(null);
   const [anim, setAnim] = useState(false);
