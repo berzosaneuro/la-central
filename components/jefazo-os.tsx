@@ -279,28 +279,28 @@ const LoginScreen = ({go}: {go: () => void}) => {
     setLoading(true);setTimeout(()=>{setGranted(true);setTimeout(()=>go(),1800)},1500);
   };
   return (
-    <div style={{width:"100%",height:"100%",background:"#000308",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
+    <div style={{width:"100%",height:"100%",background:"#000308",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",overflowY:"auto",overflowX:"hidden",position:"relative",paddingTop:"3vh",paddingBottom:"3vh"}}>
       {/* TITULO EL JEFAZO */}
-      <div style={{animation:"fadeUp 0.4s ease-out",marginBottom:12,textAlign:"center"}}>
-        <div style={{fontSize:44,fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.14em",lineHeight:1,
+      <div style={{animation:"fadeUp 0.4s ease-out",marginBottom:10,textAlign:"center",flexShrink:0}}>
+        <div style={{fontSize:"clamp(28px, 8vw, 44px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.14em",lineHeight:1,
           color:"#00D4FF",
           textShadow:"0 0 30px rgba(0,200,255,0.8), 0 0 60px rgba(0,200,255,0.5), 0 0 100px rgba(0,150,255,0.3), 0 2px 4px rgba(0,0,0,0.9)",
         }}>EL JEFAZO</div>
         <div style={{marginTop:4,fontSize:11,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.35em",color:"#0088BB",textShadow:"0 0 10px rgba(0,150,255,0.4)"}}>MASTER CONTROL SYSTEM</div>
       </div>
-      <div style={{width:"92%",maxWidth:400,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both"}}>
+      <div style={{width:"80%",maxWidth:340,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:0}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",height:"auto",display:"block",borderRadius:12,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
+        <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",maxHeight:"30vh",objectFit:"cover",display:"block",borderRadius:12,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:"25%",borderRadius:"0 0 12px 12px",background:"linear-gradient(transparent,#000308)"}}/>
       </div>
-      <div style={{width:"84%",maxWidth:370,display:"flex",flexDirection:"column",gap:12,animation:"fadeUp 0.6s ease-out 0.2s both",marginTop:16}}>
+      <div style={{width:"84%",maxWidth:370,display:"flex",flexDirection:"column",gap:10,animation:"fadeUp 0.6s ease-out 0.2s both",marginTop:14,flexShrink:0}}>
         <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>setU(e.target.value)}/>
         <LoginInput placeholder="CONTRASENA" type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
       </div>
-      {error&&<div style={{color:T.red,fontSize:13,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",marginTop:8,textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
-      <div style={{width:"84%",maxWidth:370,animation:"fadeUp 0.6s ease-out 0.35s both",marginTop:error?8:14}}>
+      {error&&<div style={{color:T.red,fontSize:13,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",marginTop:8,textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out",flexShrink:0}}>{error}</div>}
+      <div style={{width:"84%",maxWidth:370,animation:"fadeUp 0.6s ease-out 0.35s both",marginTop:error?8:12,flexShrink:0}}>
         <div style={{borderRadius:10,padding:1.5,overflow:"hidden",background:loading?`linear-gradient(90deg,${T.neonBright},${T.electric},${T.neonBright})`:`linear-gradient(90deg,${T.neon}00,${T.electric}88,${T.neonBright},${T.electric}88,${T.neon}00)`,backgroundSize:loading?"100% 100%":"400% 100%",animation:loading?"loadGlow 1s ease-in-out infinite":"neonSweep 3s linear infinite",boxShadow:loading?`0 0 22px ${T.neon}66`:`0 0 14px ${T.neon}33`}}>
-          <button onClick={doLogin} style={{width:"100%",height:54,position:"relative",overflow:"hidden",background:"#0C1E3A",border:"none",borderRadius:8.5,color:T.neonBright,fontSize:18,fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.18em",cursor:loading?"default":"pointer",textShadow:`0 0 14px ${T.neon}88`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <button onClick={doLogin} style={{width:"100%",height:48,position:"relative",overflow:"hidden",background:"#0C1E3A",border:"none",borderRadius:8.5,color:T.neonBright,fontSize:17,fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.18em",cursor:loading?"default":"pointer",textShadow:`0 0 14px ${T.neon}88`,display:"flex",alignItems:"center",justifyContent:"center"}}>
             {loading?<div style={{display:"flex",alignItems:"center",gap:10,width:"80%"}}><div style={{flex:1,height:5,background:"rgba(0,20,60,0.6)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,background:`linear-gradient(90deg,${T.neon},${T.neonBright},#fff)`,animation:"loadBar 1.5s ease-in-out forwards",boxShadow:`0 0 8px ${T.neon}`}}/></div><span style={{fontSize:13,letterSpacing:2,opacity:0.7}}>{"›››››"}</span></div>:"ENTRAR"}
           </button>
         </div>
@@ -591,7 +591,7 @@ const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back:
 };
 
 
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════��═══════════════
 // COMUNICACIONES SCREEN
 // ═══════════════════════════════════════════════════════════════
 const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
@@ -618,7 +618,7 @@ const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) =>
 
 // ═══════════════════════════════════════════════════════════════
 // COMPARTIR / QR SCREEN
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════��═════
 const ShareQR = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
   const [url,setUrl]=useState(()=>LS.get("share_url","https://eljefazo.vercel.app") as string);
   useEffect(()=>{LS.set("share_url",url)},[url]);

@@ -21,7 +21,12 @@ html, body {
   color: #E0F4FF;
   margin: 0;
   padding: 0;
+  height: 100vh;
+  width: 100vw;
   overflow: hidden;
+}
+
+#__next {
   height: 100vh;
   width: 100vw;
 }
