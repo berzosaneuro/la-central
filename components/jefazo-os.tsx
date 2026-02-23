@@ -573,7 +573,7 @@ const AddClone = ({back,toast,addClone}: {back: () => void; toast: (msg: string)
   </Screen>;
 };
 
-// ═══════════════════════════════════════════════════════════════
+// ═��═════════════════════════════════════════════════════════════
 // MARKETPLACE SCREEN
 // ═══════════════════════════════════════════════════════════════
 const Marketplace = ({back,toast,clones,addClone,removeClone}: {back: () => void; toast: (msg: string) => void; clones: Clone[]; addClone: (c: Clone) => void; removeClone: (id: string) => void}) => {
@@ -739,13 +739,17 @@ const ShareQR = ({back,toast}: {back: () => void; toast: (msg: string) => void})
   useEffect(()=>{LS.set("share_url",url)},[url]);
   const qr=`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}&bgcolor=0A1628&color=00C8FF`;
   return <Screen>
-    <Header title="COMPARTIR" sub="Link + QR" back={back} icon={"\uD83D\uDCF1"}/>
+    <Header title="COMPARTIR" sub="Link / QR / WhatsApp / Telegram" back={back} icon={"\uD83D\uDCF1"}/>
     <div style={{flex:1,overflowY:"auto",padding:"14px 16px",display:"flex",flexDirection:"column",gap:14,zIndex:1,alignItems:"center"}}>
       <Card neon style={{width:"100%"}}><Label>URL de despliegue</Label>
         <InputField placeholder="https://miapp.vercel.app" value={url} onChange={e=>setUrl(e.target.value)}/>
         <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
           <Btn h={38} fs={10} w="48%" icon={"\uD83D\uDCCB"} onClick={()=>{if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>toast("Link copiado")).catch(()=>toast("Error al copiar"))}else{toast("No se pudo copiar")}}}>COPIAR LINK</Btn>
           <Btn h={38} fs={10} w="48%" icon={"\uD83D\uDCF2"} onClick={()=>{if(navigator.share){navigator.share({title:"EL JEFAZO OS",text:"Instala la app",url}).catch(()=>{})}else{window.open(url,"_blank")}}}>ENVIAR</Btn>
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}>
+          <Btn h={38} fs={10} w="48%" neonColor="#25D366" onClick={()=>{window.open(`https://wa.me/?text=${encodeURIComponent("Instala EL JEFAZO OS: "+url)}`,"_blank");toast("Abriendo WhatsApp...")}}>WHATSAPP</Btn>
+          <Btn h={38} fs={10} w="48%" neonColor="#0088CC" onClick={()=>{window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Instala EL JEFAZO OS")}`,"_blank");toast("Abriendo Telegram...")}}>TELEGRAM</Btn>
         </div>
       </Card>
       <Card neon glow={1} style={{width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}><Label>{"C\u00F3digo QR"}</Label>
