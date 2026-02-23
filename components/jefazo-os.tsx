@@ -341,7 +341,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
           <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>IDENTIFICACI\u00D3N DEL SISTEMA</div>
         </div>
 
-        <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>setU(e.target.value)}/>
+        <LoginInput placeholder={"IDENTIFICACI\u00D3N DEL SISTEMA"} value={u} onChange={e=>setU(e.target.value)}/>
         <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
 
         {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
@@ -654,7 +654,7 @@ const CentroMando = ({back,toast,clones,nav,updateClone,gs,setGs,onExport,onImpo
   </Screen>;
 };
 
-// ═════════════════════════════���═════════════════════════════════
+// ══════════════════════���══════���═════════════════════════════════
 // RENOVACIONES SCREEN
 // ═══════════════════════════════════════════════════════════════
 const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back: () => void; toast: (msg: string) => void; renovaciones: Renovacion[]; setRenovaciones: React.Dispatch<React.SetStateAction<Renovacion[]>>}) => {
