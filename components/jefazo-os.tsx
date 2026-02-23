@@ -86,6 +86,83 @@ const calcScore = (c: Clone): number => {
 const scoreColor = (s: number) => s >= 70 ? T.green : s >= 40 ? T.orange : T.red;
 const scoreLabel = (s: number) => s >= 70 ? "ALTO" : s >= 40 ? "MEDIO" : "BAJO";
 
+// ── SOUND SYSTEM (Web Audio API) ──────────────────────────
+const SFX = {
+  _ctx: null as AudioContext | null,
+  _getCtx(): AudioContext {
+    if (!this._ctx || this._ctx.state === "closed") this._ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    if (this._ctx.state === "suspended") this._ctx.resume();
+    return this._ctx;
+  },
+  _tone(freq: number, dur: number, type: OscillatorType = "sine", vol = 0.15, delay = 0) {
+    try {
+      const ctx = this._getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + dur);
+    } catch {}
+  },
+  login() {
+    // Epic ascending arpeggio - futuristic access granted
+    this._tone(440, 0.15, "sine", 0.12, 0);
+    this._tone(554, 0.15, "sine", 0.12, 0.1);
+    this._tone(659, 0.15, "sine", 0.14, 0.2);
+    this._tone(880, 0.3, "sine", 0.16, 0.3);
+    this._tone(1108, 0.4, "triangle", 0.08, 0.45);
+  },
+  notify() {
+    // Soft double ping
+    this._tone(880, 0.12, "sine", 0.1, 0);
+    this._tone(1100, 0.15, "sine", 0.08, 0.12);
+  },
+  error() {
+    // Low buzz
+    this._tone(180, 0.2, "sawtooth", 0.08, 0);
+    this._tone(140, 0.25, "sawtooth", 0.06, 0.15);
+  },
+  click() {
+    // Quick tick
+    this._tone(600, 0.05, "square", 0.04, 0);
+  },
+  alert() {
+    // Urgent siren-like
+    this._tone(660, 0.18, "square", 0.1, 0);
+    this._tone(880, 0.18, "square", 0.1, 0.2);
+    this._tone(660, 0.18, "square", 0.1, 0.4);
+    this._tone(880, 0.25, "square", 0.12, 0.6);
+  },
+  success() {
+    // Positive chime
+    this._tone(523, 0.12, "sine", 0.1, 0);
+    this._tone(659, 0.12, "sine", 0.1, 0.1);
+    this._tone(784, 0.2, "sine", 0.12, 0.2);
+  }
+};
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────
+const PushNotif = {
+  supported: typeof window !== "undefined" && "Notification" in window,
+  async requestPermission(): Promise<boolean> {
+    if (!this.supported) return false;
+    const perm = await Notification.requestPermission();
+    return perm === "granted";
+  },
+  send(title: string, body: string, icon = "/icon-192.png") {
+    if (!this.supported || Notification.permission !== "granted") return;
+    try {
+      new Notification(title, { body, icon, badge: "/icon-192.png", tag: "jefazo-" + Date.now() });
+    } catch {}
+  }
+};
+
 // ── MARKETPLACE DATA ───────────────────────────────────────
 const MP_CLONES = [
   {id:"fitness",name:"CENTRO FITNESS LITE",desc:"App de entrenamiento completa",tipo:"fitness",ver:"2.4.0",size:"12.3 MB",cat:"Salud",icon:"\uD83D\uDCAA"},
@@ -164,8 +241,9 @@ const Btn = ({children,onClick,primary=true,w="100%",h=48,neon=true,glow=1,fs=12
   const bg2=danger?"#A03030":success?"#187740":primary?"#184878":"transparent";
   const bc=danger?"#CC4444":success?"#22CC66":primary?T.borderBright:T.border;
   const tc=danger?"#FF8888":success?"#66FFAA":T.neonBright;
+  const handleClick=disabled?undefined:()=>{SFX.click();onClick?.()};
   const inner=(
-    <button onClick={disabled?undefined:onClick} onPointerDown={()=>!disabled&&setPr(true)} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
+    <button onClick={handleClick} onPointerDown={()=>!disabled&&setPr(true)} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
       style={{width:"100%",height:h,position:"relative",overflow:"hidden",border:`1.5px solid ${bc}${primary||danger||success?"88":""}`,borderRadius:12,opacity:disabled?0.4:1,
         background:primary||danger||success?`linear-gradient(180deg,${bg2} 0%,${bg} 40%,${T.dark} 100%)`:"linear-gradient(180deg,rgba(15,30,55,0.4) 0%,rgba(5,12,24,0.6) 100%)",
         color:tc,fontSize:fs,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.14em",cursor:disabled?"not-allowed":"pointer",
@@ -221,7 +299,7 @@ const ScoreBar = ({score}: {score: number}) => {
 };
 
 const Header = ({title,sub,back,icon="\u2B21"}: {title: string; sub?: string; back?: () => void; icon?: string}) => (
-  <div style={{padding:"16px 16px 0",animation:"fadeUp 0.3s ease-out"}}>
+  <div style={{padding:"16px 16px 0",paddingTop:"calc(env(safe-area-inset-top, 0px) + 16px)",animation:"fadeUp 0.3s ease-out"}}>
     {back&&<button onClick={back} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 2px",display:"flex",alignItems:"center",gap:6,color:T.neon,fontSize:13,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.08em",marginBottom:4}}>
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke={T.neon} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>VOLVER
     </button>}
@@ -269,8 +347,8 @@ const QuickActions = ({onSync,onUpdate,onExport,onImport,onEmergency,emergency}:
   const [open,setOpen]=useState(false);
   const acts=[{i:"\uD83D\uDD04",l:"SINCRONIZAR TODO",fn:onSync},{i:"\u2B06\uFE0F",l:"ACTUALIZAR TODO",fn:onUpdate},{i:"\uD83E\uDDFE",l:"EXPORTAR",fn:onExport},{i:"\uD83D\uDCE5",l:"IMPORTAR",fn:onImport},{i:"\uD83D\uDEA8",l:emergency?"EMERG. DESACTIVAR":"EMERG. ACTIVAR",fn:onEmergency,d:true}];
   return <>
-    <div onClick={()=>setOpen(!open)} style={{position:"fixed",bottom:16,right:16,zIndex:800,width:48,height:48,borderRadius:"50%",background:`linear-gradient(135deg,#0A3058,#184878)`,border:`2px solid ${T.neon}66`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 4px 16px rgba(0,0,0,0.5), 0 0 20px ${T.neon}44`,fontSize:20,transform:open?"rotate(45deg)":"none",transition:"transform 0.3s"}}>{"\u26A1"}</div>
-    {open&&<div style={{position:"fixed",bottom:72,right:16,zIndex:800,display:"flex",flexDirection:"column",gap:8,animation:"fadeUp 0.2s ease-out"}}>
+    <div onClick={()=>setOpen(!open)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom, 0px) + 16px)",right:16,zIndex:800,width:48,height:48,borderRadius:"50%",background:`linear-gradient(135deg,#0A3058,#184878)`,border:`2px solid ${T.neon}66`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 4px 16px rgba(0,0,0,0.5), 0 0 20px ${T.neon}44`,fontSize:20,transform:open?"rotate(45deg)":"none",transition:"transform 0.3s"}}>{"\u26A1"}</div>
+    {open&&<div style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom, 0px) + 72px)",right:16,zIndex:800,display:"flex",flexDirection:"column",gap:8,animation:"fadeUp 0.2s ease-out"}}>
       {acts.map(a=><div key={a.l} onClick={()=>{a.fn();setOpen(false)}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",borderRadius:10,cursor:"pointer",background:a.d?"linear-gradient(135deg,#301020,#200818)":"linear-gradient(135deg,#0C2040,#061020)",border:`1px solid ${a.d?T.red+"44":T.neon+"33"}`,color:a.d?T.red:T.neonBright,fontSize:11,fontWeight:700,letterSpacing:"0.08em",boxShadow:`0 4px 16px #000a`}}>
         <span style={{fontSize:14}}>{a.i}</span>{a.l}
       </div>)}
@@ -298,9 +376,9 @@ const LoginScreen = ({go}: {go: () => void}) => {
     const userOk=u.trim().toLowerCase()==="el jefazo";
     const passOk=pw==="berzosa15031980";
     if(!userOk||!passOk){
-      setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
+      SFX.error();setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
     }
-    setLoading(true);setTimeout(()=>{setGranted(true);setTimeout(()=>go(),1800)},1500);
+    setLoading(true);setTimeout(()=>{setGranted(true);SFX.login();setTimeout(()=>go(),1800)},1500);
   };
   const handleSubmit=(e: React.FormEvent)=>{e.preventDefault();doLogin();};
   return (
@@ -341,7 +419,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
           <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>IDENTIFICACI\u00D3N DEL SISTEMA</div>
         </div>
 
-        <LoginInput placeholder="USUARIO / ID" value={u} onChange={e=>setU(e.target.value)}/>
+        <LoginInput placeholder={"IDENTIFICACI\u00D3N DEL SISTEMA"} value={u} onChange={e=>setU(e.target.value)}/>
         <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
 
         {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
@@ -573,7 +651,7 @@ const AddClone = ({back,toast,addClone}: {back: () => void; toast: (msg: string)
   </Screen>;
 };
 
-// ═══════════════════════════════════════════════════════════════
+// ═���═════════════════════════════════════════════════════════════
 // MARKETPLACE SCREEN
 // ═══════════════════════════════════════════════════════════════
 const Marketplace = ({back,toast,clones,addClone,removeClone}: {back: () => void; toast: (msg: string) => void; clones: Clone[]; addClone: (c: Clone) => void; removeClone: (id: string) => void}) => {
@@ -654,7 +732,7 @@ const CentroMando = ({back,toast,clones,nav,updateClone,gs,setGs,onExport,onImpo
   </Screen>;
 };
 
-// ═════════════════════════════���═════════════════════════════════
+// ══════════════════════���══════���═════════════════════════════════
 // RENOVACIONES SCREEN
 // ═══════════════════════════════════════════════════════════════
 const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back: () => void; toast: (msg: string) => void; renovaciones: Renovacion[]; setRenovaciones: React.Dispatch<React.SetStateAction<Renovacion[]>>}) => {
@@ -708,7 +786,7 @@ const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back:
 
 // ═══════════════════════════════════════════════════════════════
 // COMUNICACIONES SCREEN
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════��══════════════
 const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
   const [phone,setPhone]=useState(()=>LS.get("comms_ph","") as string);const [email,setEmail]=useState(()=>LS.get("comms_em","") as string);
   const [subject,setSubject]=useState("EL JEFAZO \u2014 Info");const [msg,setMsg]=useState("");
@@ -735,17 +813,21 @@ const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) =>
 // COMPARTIR / QR SCREEN
 // ═══════════════════════════════════════════════════════════════
 const ShareQR = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
-  const [url,setUrl]=useState(()=>LS.get("share_url","https://eljefazo.vercel.app") as string);
+  const [url,setUrl]=useState(()=>LS.get("share_url",typeof window!=="undefined"?window.location.origin:"https://la-central-sigma.vercel.app") as string);
   useEffect(()=>{LS.set("share_url",url)},[url]);
   const qr=`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}&bgcolor=0A1628&color=00C8FF`;
   return <Screen>
-    <Header title="COMPARTIR" sub="Link + QR" back={back} icon={"\uD83D\uDCF1"}/>
+    <Header title="COMPARTIR" sub="Link / QR / WhatsApp / Telegram" back={back} icon={"\uD83D\uDCF1"}/>
     <div style={{flex:1,overflowY:"auto",padding:"14px 16px",display:"flex",flexDirection:"column",gap:14,zIndex:1,alignItems:"center"}}>
       <Card neon style={{width:"100%"}}><Label>URL de despliegue</Label>
         <InputField placeholder="https://miapp.vercel.app" value={url} onChange={e=>setUrl(e.target.value)}/>
-        <div style={{display:"flex",gap:8,marginTop:10}}>
-          <Btn h={38} fs={10} w="50%" icon={"\uD83D\uDCCB"} onClick={()=>{navigator.clipboard?.writeText(url);toast("Link copiado")}}>COPIAR LINK</Btn>
-          <Btn h={38} fs={10} w="50%" icon={"\uD83D\uDCF2"} onClick={()=>window.open(url,"_blank")}>ABRIR</Btn>
+        <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+          <Btn h={38} fs={10} w="48%" icon={"\uD83D\uDCCB"} onClick={()=>{if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>toast("Link copiado")).catch(()=>toast("Error al copiar"))}else{toast("No se pudo copiar")}}}>COPIAR LINK</Btn>
+          <Btn h={38} fs={10} w="48%" icon={"\uD83D\uDCF2"} onClick={()=>{if(navigator.share){navigator.share({title:"EL JEFAZO OS",text:"Instala la app",url}).catch(()=>{})}else{window.open(url,"_blank")}}}>ENVIAR</Btn>
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}>
+          <Btn h={38} fs={10} w="48%" neonColor="#25D366" onClick={()=>{window.open(`https://wa.me/?text=${encodeURIComponent("Instala EL JEFAZO OS: "+url)}`,"_blank");toast("Abriendo WhatsApp...")}}>WHATSAPP</Btn>
+          <Btn h={38} fs={10} w="48%" neonColor="#0088CC" onClick={()=>{window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Instala EL JEFAZO OS")}`,"_blank");toast("Abriendo Telegram...")}}>TELEGRAM</Btn>
         </div>
       </Card>
       <Card neon glow={1} style={{width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}><Label>{"C\u00F3digo QR"}</Label>
@@ -955,7 +1037,7 @@ const EmergencyScreen = ({back,toast,clones,updateClone,setGs}: {back: () => voi
 };
 
 
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════���════════════════
 // CRITICAL ALERT OVERLAY
 // ═══════════════════════════════════════════════════════════════
 const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renovacion | null; onResolve: () => void; onSnooze: () => void; onDismiss: () => void; toast: (msg: string) => void}) => {
@@ -988,7 +1070,7 @@ const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renov
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN APP
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════���════
 export default function JefazoOS() {
   const [scr, setScr] = useState("login");
   const [scrArg, setScrArg] = useState<string | null>(null);
@@ -1010,6 +1092,13 @@ export default function JefazoOS() {
   useEffect(() => { LS.set("gs", gs); }, [gs]);
   useEffect(() => { LS.set("adminSettings", adminSettings); }, [adminSettings]);
 
+  // ── REQUEST PUSH PERMISSION AFTER LOGIN ──────────────────
+  useEffect(() => {
+    if (scr !== "login" && PushNotif.supported && Notification.permission === "default") {
+      PushNotif.requestPermission();
+    }
+  }, [scr]);
+
   // ── CRITICAL ALERT CHECK ─────────────────────────────────
   useEffect(() => {
     if (alertDismissed || scr === "login") return;
@@ -1017,7 +1106,12 @@ export default function JefazoOS() {
       const e = renovEstado(r);
       return e === "CRITICO" || e === "VENCIDO";
     });
-    if (crit) setCritAlert(crit); else setCritAlert(null);
+    if (crit) {
+      setCritAlert(crit);
+      SFX.alert();
+      const days = daysUntil(crit.fechaRenovacion);
+      PushNotif.send("ALERTA CRITICA", `${crit.nombre} - ${days < 0 ? `VENCIDO hace ${Math.abs(days)} dias` : `Renueva en ${days} dias`}`);
+    } else setCritAlert(null);
   }, [renovaciones, scr, alertDismissed]);
 
   // ── NAV ──────────────────────────────────────────────────
@@ -1027,7 +1121,7 @@ export default function JefazoOS() {
     setTimeout(() => { setScr(to); setScrArg(arg); setDir("in"); setAlertDismissed(false); setTimeout(() => setAnim(false), 250); }, 200);
   }, [anim]);
 
-  const show = useCallback((msg: string) => setToast({ on: true, msg }), []);
+  const show = useCallback((msg: string) => { SFX.notify(); setToast({ on: true, msg }); }, []);
   const hide = useCallback(() => setToast({ on: false, msg: "" }), []);
 
   // ── CLONE OPERATIONS ─────────────────────────────────────
