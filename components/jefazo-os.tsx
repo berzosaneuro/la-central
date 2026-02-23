@@ -299,7 +299,7 @@ const ScoreBar = ({score}: {score: number}) => {
 };
 
 const Header = ({title,sub,back,icon="\u2B21"}: {title: string; sub?: string; back?: () => void; icon?: string}) => (
-  <div style={{padding:"16px 16px 0",animation:"fadeUp 0.3s ease-out"}}>
+  <div style={{padding:"16px 16px 0",paddingTop:"calc(env(safe-area-inset-top, 0px) + 16px)",animation:"fadeUp 0.3s ease-out"}}>
     {back&&<button onClick={back} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 2px",display:"flex",alignItems:"center",gap:6,color:T.neon,fontSize:13,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.08em",marginBottom:4}}>
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke={T.neon} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>VOLVER
     </button>}
@@ -347,8 +347,8 @@ const QuickActions = ({onSync,onUpdate,onExport,onImport,onEmergency,emergency}:
   const [open,setOpen]=useState(false);
   const acts=[{i:"\uD83D\uDD04",l:"SINCRONIZAR TODO",fn:onSync},{i:"\u2B06\uFE0F",l:"ACTUALIZAR TODO",fn:onUpdate},{i:"\uD83E\uDDFE",l:"EXPORTAR",fn:onExport},{i:"\uD83D\uDCE5",l:"IMPORTAR",fn:onImport},{i:"\uD83D\uDEA8",l:emergency?"EMERG. DESACTIVAR":"EMERG. ACTIVAR",fn:onEmergency,d:true}];
   return <>
-    <div onClick={()=>setOpen(!open)} style={{position:"fixed",bottom:16,right:16,zIndex:800,width:48,height:48,borderRadius:"50%",background:`linear-gradient(135deg,#0A3058,#184878)`,border:`2px solid ${T.neon}66`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 4px 16px rgba(0,0,0,0.5), 0 0 20px ${T.neon}44`,fontSize:20,transform:open?"rotate(45deg)":"none",transition:"transform 0.3s"}}>{"\u26A1"}</div>
-    {open&&<div style={{position:"fixed",bottom:72,right:16,zIndex:800,display:"flex",flexDirection:"column",gap:8,animation:"fadeUp 0.2s ease-out"}}>
+    <div onClick={()=>setOpen(!open)} style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom, 0px) + 16px)",right:16,zIndex:800,width:48,height:48,borderRadius:"50%",background:`linear-gradient(135deg,#0A3058,#184878)`,border:`2px solid ${T.neon}66`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 4px 16px rgba(0,0,0,0.5), 0 0 20px ${T.neon}44`,fontSize:20,transform:open?"rotate(45deg)":"none",transition:"transform 0.3s"}}>{"\u26A1"}</div>
+    {open&&<div style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom, 0px) + 72px)",right:16,zIndex:800,display:"flex",flexDirection:"column",gap:8,animation:"fadeUp 0.2s ease-out"}}>
       {acts.map(a=><div key={a.l} onClick={()=>{a.fn();setOpen(false)}} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 14px",borderRadius:10,cursor:"pointer",background:a.d?"linear-gradient(135deg,#301020,#200818)":"linear-gradient(135deg,#0C2040,#061020)",border:`1px solid ${a.d?T.red+"44":T.neon+"33"}`,color:a.d?T.red:T.neonBright,fontSize:11,fontWeight:700,letterSpacing:"0.08em",boxShadow:`0 4px 16px #000a`}}>
         <span style={{fontSize:14}}>{a.i}</span>{a.l}
       </div>)}
@@ -786,7 +786,7 @@ const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back:
 
 // ═══════════════════════════════════════════════════════════════
 // COMUNICACIONES SCREEN
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════��══════════════
 const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
   const [phone,setPhone]=useState(()=>LS.get("comms_ph","") as string);const [email,setEmail]=useState(()=>LS.get("comms_em","") as string);
   const [subject,setSubject]=useState("EL JEFAZO \u2014 Info");const [msg,setMsg]=useState("");
@@ -1037,7 +1037,7 @@ const EmergencyScreen = ({back,toast,clones,updateClone,setGs}: {back: () => voi
 };
 
 
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════���════════════════
 // CRITICAL ALERT OVERLAY
 // ═══════════════════════════════════════════════════════════════
 const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renovacion | null; onResolve: () => void; onSnooze: () => void; onDismiss: () => void; toast: (msg: string) => void}) => {
