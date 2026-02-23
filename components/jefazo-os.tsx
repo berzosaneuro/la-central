@@ -329,7 +329,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
       </div>
 
       {/* BUGATTI - original size, just flipped */}
-      <div style={{width:"92%",maxWidth:400,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0,zIndex:1}}>
+      <div style={{width:"92%",maxWidth:400,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0,zIndex:1,marginTop:"-1.5vh"}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",height:"auto",display:"block",borderRadius:12,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:"25%",borderRadius:"0 0 12px 12px",background:"linear-gradient(transparent,#000a1a)"}}/>
@@ -654,7 +654,7 @@ const CentroMando = ({back,toast,clones,nav,updateClone,gs,setGs,onExport,onImpo
   </Screen>;
 };
 
-// ═══════════════════════════════════════════════════════════════
+// ═════════════════════════════���═════════════════════════════════
 // RENOVACIONES SCREEN
 // ═══════════════════════════════════════════════════════════════
 const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back: () => void; toast: (msg: string) => void; renovaciones: Renovacion[]; setRenovaciones: React.Dispatch<React.SetStateAction<Renovacion[]>>}) => {
