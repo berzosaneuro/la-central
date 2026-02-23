@@ -86,6 +86,83 @@ const calcScore = (c: Clone): number => {
 const scoreColor = (s: number) => s >= 70 ? T.green : s >= 40 ? T.orange : T.red;
 const scoreLabel = (s: number) => s >= 70 ? "ALTO" : s >= 40 ? "MEDIO" : "BAJO";
 
+// ── SOUND SYSTEM (Web Audio API) ──────────────────────────
+const SFX = {
+  _ctx: null as AudioContext | null,
+  _getCtx(): AudioContext {
+    if (!this._ctx || this._ctx.state === "closed") this._ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    if (this._ctx.state === "suspended") this._ctx.resume();
+    return this._ctx;
+  },
+  _tone(freq: number, dur: number, type: OscillatorType = "sine", vol = 0.15, delay = 0) {
+    try {
+      const ctx = this._getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + dur);
+    } catch {}
+  },
+  login() {
+    // Epic ascending arpeggio - futuristic access granted
+    this._tone(440, 0.15, "sine", 0.12, 0);
+    this._tone(554, 0.15, "sine", 0.12, 0.1);
+    this._tone(659, 0.15, "sine", 0.14, 0.2);
+    this._tone(880, 0.3, "sine", 0.16, 0.3);
+    this._tone(1108, 0.4, "triangle", 0.08, 0.45);
+  },
+  notify() {
+    // Soft double ping
+    this._tone(880, 0.12, "sine", 0.1, 0);
+    this._tone(1100, 0.15, "sine", 0.08, 0.12);
+  },
+  error() {
+    // Low buzz
+    this._tone(180, 0.2, "sawtooth", 0.08, 0);
+    this._tone(140, 0.25, "sawtooth", 0.06, 0.15);
+  },
+  click() {
+    // Quick tick
+    this._tone(600, 0.05, "square", 0.04, 0);
+  },
+  alert() {
+    // Urgent siren-like
+    this._tone(660, 0.18, "square", 0.1, 0);
+    this._tone(880, 0.18, "square", 0.1, 0.2);
+    this._tone(660, 0.18, "square", 0.1, 0.4);
+    this._tone(880, 0.25, "square", 0.12, 0.6);
+  },
+  success() {
+    // Positive chime
+    this._tone(523, 0.12, "sine", 0.1, 0);
+    this._tone(659, 0.12, "sine", 0.1, 0.1);
+    this._tone(784, 0.2, "sine", 0.12, 0.2);
+  }
+};
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────
+const PushNotif = {
+  supported: typeof window !== "undefined" && "Notification" in window,
+  async requestPermission(): Promise<boolean> {
+    if (!this.supported) return false;
+    const perm = await Notification.requestPermission();
+    return perm === "granted";
+  },
+  send(title: string, body: string, icon = "/icon-192.png") {
+    if (!this.supported || Notification.permission !== "granted") return;
+    try {
+      new Notification(title, { body, icon, badge: "/icon-192.png", tag: "jefazo-" + Date.now() });
+    } catch {}
+  }
+};
+
 // ── MARKETPLACE DATA ───────────────────────────────────────
 const MP_CLONES = [
   {id:"fitness",name:"CENTRO FITNESS LITE",desc:"App de entrenamiento completa",tipo:"fitness",ver:"2.4.0",size:"12.3 MB",cat:"Salud",icon:"\uD83D\uDCAA"},
@@ -164,8 +241,9 @@ const Btn = ({children,onClick,primary=true,w="100%",h=48,neon=true,glow=1,fs=12
   const bg2=danger?"#A03030":success?"#187740":primary?"#184878":"transparent";
   const bc=danger?"#CC4444":success?"#22CC66":primary?T.borderBright:T.border;
   const tc=danger?"#FF8888":success?"#66FFAA":T.neonBright;
+  const handleClick=disabled?undefined:()=>{SFX.click();onClick?.()};
   const inner=(
-    <button onClick={disabled?undefined:onClick} onPointerDown={()=>!disabled&&setPr(true)} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
+    <button onClick={handleClick} onPointerDown={()=>!disabled&&setPr(true)} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
       style={{width:"100%",height:h,position:"relative",overflow:"hidden",border:`1.5px solid ${bc}${primary||danger||success?"88":""}`,borderRadius:12,opacity:disabled?0.4:1,
         background:primary||danger||success?`linear-gradient(180deg,${bg2} 0%,${bg} 40%,${T.dark} 100%)`:"linear-gradient(180deg,rgba(15,30,55,0.4) 0%,rgba(5,12,24,0.6) 100%)",
         color:tc,fontSize:fs,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.14em",cursor:disabled?"not-allowed":"pointer",
@@ -298,9 +376,9 @@ const LoginScreen = ({go}: {go: () => void}) => {
     const userOk=u.trim().toLowerCase()==="el jefazo";
     const passOk=pw==="berzosa15031980";
     if(!userOk||!passOk){
-      setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
+      SFX.error();setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
     }
-    setLoading(true);setTimeout(()=>{setGranted(true);setTimeout(()=>go(),1800)},1500);
+    setLoading(true);setTimeout(()=>{setGranted(true);SFX.login();setTimeout(()=>go(),1800)},1500);
   };
   const handleSubmit=(e: React.FormEvent)=>{e.preventDefault();doLogin();};
   return (
@@ -573,7 +651,7 @@ const AddClone = ({back,toast,addClone}: {back: () => void; toast: (msg: string)
   </Screen>;
 };
 
-// ═��═════════════════════════════════════════════════════════════
+// ═���═════════════════════════════════════════════════════════════
 // MARKETPLACE SCREEN
 // ═══════════════════════════════════════════════════════════════
 const Marketplace = ({back,toast,clones,addClone,removeClone}: {back: () => void; toast: (msg: string) => void; clones: Clone[]; addClone: (c: Clone) => void; removeClone: (id: string) => void}) => {
@@ -992,7 +1070,7 @@ const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renov
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN APP
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════���════
 export default function JefazoOS() {
   const [scr, setScr] = useState("login");
   const [scrArg, setScrArg] = useState<string | null>(null);
@@ -1014,6 +1092,13 @@ export default function JefazoOS() {
   useEffect(() => { LS.set("gs", gs); }, [gs]);
   useEffect(() => { LS.set("adminSettings", adminSettings); }, [adminSettings]);
 
+  // ── REQUEST PUSH PERMISSION AFTER LOGIN ──────────────────
+  useEffect(() => {
+    if (scr !== "login" && PushNotif.supported && Notification.permission === "default") {
+      PushNotif.requestPermission();
+    }
+  }, [scr]);
+
   // ── CRITICAL ALERT CHECK ─────────────────────────────────
   useEffect(() => {
     if (alertDismissed || scr === "login") return;
@@ -1021,7 +1106,12 @@ export default function JefazoOS() {
       const e = renovEstado(r);
       return e === "CRITICO" || e === "VENCIDO";
     });
-    if (crit) setCritAlert(crit); else setCritAlert(null);
+    if (crit) {
+      setCritAlert(crit);
+      SFX.alert();
+      const days = daysUntil(crit.fechaRenovacion);
+      PushNotif.send("ALERTA CRITICA", `${crit.nombre} - ${days < 0 ? `VENCIDO hace ${Math.abs(days)} dias` : `Renueva en ${days} dias`}`);
+    } else setCritAlert(null);
   }, [renovaciones, scr, alertDismissed]);
 
   // ── NAV ──────────────────────────────────────────────────
@@ -1031,7 +1121,7 @@ export default function JefazoOS() {
     setTimeout(() => { setScr(to); setScrArg(arg); setDir("in"); setAlertDismissed(false); setTimeout(() => setAnim(false), 250); }, 200);
   }, [anim]);
 
-  const show = useCallback((msg: string) => setToast({ on: true, msg }), []);
+  const show = useCallback((msg: string) => { SFX.notify(); setToast({ on: true, msg }); }, []);
   const hide = useCallback(() => setToast({ on: false, msg: "" }), []);
 
   // ── CLONE OPERATIONS ─────────────────────────────────────
