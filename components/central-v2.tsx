@@ -172,7 +172,7 @@ const MP_CLONES = [
   {id:"cardio",name:"CARDIO BLAST PRO",desc:"Cardio intenso",tipo:"fitness",ver:"3.1.0",size:"9.8 MB",cat:"Fitness",icon:"\uD83C\uDFC3"},
   {id:"mind",name:"MINDFULNESS APP",desc:"Meditacion guiada",tipo:"bienestar",ver:"2.0.0",size:"6.4 MB",cat:"Bienestar",icon:"\uD83E\uDDE0"},
   {id:"shop",name:"TIENDA ONLINE",desc:"E-commerce con pagos",tipo:"comercio",ver:"4.2.1",size:"22.5 MB",cat:"Comercio",icon:"\uD83D\uDED2"},
-  {id:"crm",name:"CRM JEFAZO",desc:"Gestion de clientes",tipo:"negocio",ver:"1.0.0",size:"18.9 MB",cat:"Negocio",icon:"\uD83D\uDCCA"},
+  {id:"crm",name:"CRM CENTRAL",desc:"Gestion de clientes",tipo:"negocio",ver:"1.0.0",size:"18.9 MB",cat:"Negocio",icon:"\uD83D\uDCCA"},
 ];
 const DEF_CLONES: Clone[] = [
   {id:"fitness",name:"CENTRO FITNESS LITE",desc:"App fitness",tipo:"fitness",vi:"2.3.1",vd:"2.4.0",estado:"ACTIVO",server:"ONLINE",sync:"2026-02-09T10:30:00Z",upd:"2026-02-07T08:00:00Z",perm:"Admin",icon:"\uD83D\uDCAA",ch:"stable",auto:false,logs:["Instalado v2.3.1"],prev:"2.2.0",ingresos:320,score:0},
@@ -387,7 +387,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
         background:"radial-gradient(ellipse at 20% 10%, rgba(0,100,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 15%, rgba(0,150,255,0.06) 0%, transparent 40%)",
         zIndex:0}}/>
 
-      {/* TITULO EL JEFAZO - Chrome/Silver metal 3D */}
+      {/* TITULO CENTRAL v2.0 - Chrome/Silver metal 3D */}
       <div style={{animation:"fadeUp 0.4s ease-out",textAlign:"center",flexShrink:0,zIndex:1}}>
         <div style={{
           fontSize:"clamp(36px, 11vw, 56px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",lineHeight:1,
@@ -403,7 +403,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
             0 0 60px rgba(100,140,180,0.15),
             0 -1px 2px rgba(255,255,255,0.35)
           `,
-        }}>EL JEFAZO</div>
+        }}>CENTRAL</div>
       </div>
 
       {/* BUGATTI - original size, just flipped */}
@@ -789,11 +789,11 @@ const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back:
 // ════════════════════════════════════════════════��══════════════
 const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
   const [phone,setPhone]=useState(()=>LS.get("comms_ph","") as string);const [email,setEmail]=useState(()=>LS.get("comms_em","") as string);
-  const [subject,setSubject]=useState("EL JEFAZO \u2014 Info");const [msg,setMsg]=useState("");
+  const [subject,setSubject]=useState("CENTRAL v2.0 \u2014 Info");const [msg,setMsg]=useState("");
   useEffect(()=>{LS.set("comms_ph",phone)},[phone]);useEffect(()=>{LS.set("comms_em",email)},[email]);
   const sendWA=()=>{if(!phone||!msg){toast("Telefono y mensaje necesarios");return;}window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");toast("Abriendo WhatsApp...")};
   const sendEM=()=>{if(!email||!msg){toast("Email y mensaje necesarios");return;}window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`,"_blank");toast("Abriendo email...")};
-  const tpl=[{l:"Acceso listo",t:"Tu acceso a EL JEFAZO ha sido activado."},{l:"Actualizacion",t:"Nueva actualizacion disponible en EL JEFAZO OS."},{l:"Pago recibido",t:"Tu pago ha sido recibido. Suscripcion activa."}];
+  const tpl=[{l:"Acceso listo",t:"Tu acceso a Central v2.0 ha sido activado."},{l:"Actualizacion",t:"Nueva actualizacion disponible en Central v2.0."},{l:"Pago recibido",t:"Tu pago ha sido recibido. Suscripcion activa."}];
   return <Screen>
     <Header title="COMUNICACIONES" sub="WhatsApp y Email" back={back} icon={"\uD83D\uDCAC"}/>
     <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:12,zIndex:1}}>
@@ -823,11 +823,9 @@ const ShareQR = ({back,toast}: {back: () => void; toast: (msg: string) => void})
         <InputField placeholder="https://miapp.vercel.app" value={url} onChange={e=>setUrl(e.target.value)}/>
         <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
           <Btn h={38} fs={10} w="48%" icon={"\uD83D\uDCCB"} onClick={()=>{if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>toast("Link copiado")).catch(()=>toast("Error al copiar"))}else{toast("No se pudo copiar")}}}>COPIAR LINK</Btn>
-          <Btn h={38} fs={10} w="48%" icon={"\uD83D\uDCF2"} onClick={()=>{if(navigator.share){navigator.share({title:"EL JEFAZO OS",text:"Instala la app",url}).catch(()=>{})}else{window.open(url,"_blank")}}}>ENVIAR</Btn>
-        </div>
-        <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}>
-          <Btn h={38} fs={10} w="48%" neonColor="#25D366" onClick={()=>{window.open(`https://wa.me/?text=${encodeURIComponent("Instala EL JEFAZO OS: "+url)}`,"_blank");toast("Abriendo WhatsApp...")}}>WHATSAPP</Btn>
-          <Btn h={38} fs={10} w="48%" neonColor="#0088CC" onClick={()=>{window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Instala EL JEFAZO OS")}`,"_blank");toast("Abriendo Telegram...")}}>TELEGRAM</Btn>
+      <Btn h={38} fs={10} w="48%" icon={"\uD83D\uDCF2"} onClick={()=>{if(navigator.share){navigator.share({title:"Central v2.0",text:"Instala la app",url}).catch(()=>{})}else{window.open(url,"_blank")}}}>ENVIAR</Btn>
+      <Btn h={38} fs={10} w="48%" neonColor="#25D366" onClick={()=>{window.open(`https://wa.me/?text=${encodeURIComponent("Instala Central v2.0: "+url)}`,"_blank");toast("Abriendo WhatsApp...")}}>WHATSAPP</Btn>
+      <Btn h={38} fs={10} w="48%" neonColor="#0088CC" onClick={()=>{window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Instala Central v2.0")}`,"_blank");toast("Abriendo Telegram...")}}>TELEGRAM</Btn>
         </div>
       </Card>
       <Card neon glow={1} style={{width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}><Label>{"C\u00F3digo QR"}</Label>

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EL JEFAZO OS",
+  title: "Central v2.0",
   description: "Master Control App — Gestion de clones y ecosistema",
   manifest: "/manifest.json",
   icons: {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "JEFAZO",
+    title: "Central",
   },
 };
 
