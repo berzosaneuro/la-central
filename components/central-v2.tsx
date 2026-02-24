@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 // ═══════════════════════════════════════════════════════════════
-// EL JEFAZO OS v5.1.0 — MASTER CONTROL PWA (Next.js Build)
+// CENTRAL v2.0 — MASTER CONTROL PWA (Next.js Build)
 // ═══════════════════════════════════════════════════════════════
 
 const BUGATTI_IMG = "/bugatti.jpg";
@@ -21,8 +21,8 @@ const APP_VERSION = "5.1.0";
 
 // ── PERSISTENCE ────────────────────────────────────────────
 const LS = {
-  get: (k: string, d: unknown) => { try { const v = typeof window !== "undefined" ? localStorage.getItem("jz_" + k) : null; return v ? JSON.parse(v) : d; } catch { return d; } },
-  set: (k: string, v: unknown) => { try { if (typeof window !== "undefined") localStorage.setItem("jz_" + k, JSON.stringify(v)); } catch {} },
+  get: (k: string, d: unknown) => { try { const v = typeof window !== "undefined" ? localStorage.getItem("central_" + k) : null; return v ? JSON.parse(v) : d; } catch { return d; } },
+  set: (k: string, v: unknown) => { try { if (typeof window !== "undefined") localStorage.setItem("central_" + k, JSON.stringify(v)); } catch {} },
 };
 const semver = {
   parse: (v: string) => (v||"0.0.0").replace(/^v/,"").split(".").map(Number),
@@ -158,7 +158,7 @@ const PushNotif = {
   send(title: string, body: string, icon = "/icon-192.png") {
     if (!this.supported || Notification.permission !== "granted") return;
     try {
-      new Notification(title, { body, icon, badge: "/icon-192.png", tag: "jefazo-" + Date.now() });
+      new Notification(title, { body, icon, badge: "/icon-192.png", tag: "central-" + Date.now() });
     } catch {}
   }
 };
@@ -180,7 +180,7 @@ const DEF_CLONES: Clone[] = [
   {id:"yoga",name:"YOGA STUDIO BASE",desc:"Yoga",tipo:"bienestar",vi:"1.5.0",vd:"1.6.0",estado:"INACTIVO",server:"OFFLINE",sync:"2026-01-20T09:00:00Z",upd:"2026-01-10T10:00:00Z",perm:"User",icon:"\uD83E\uDDD8",ch:"beta",auto:false,logs:["Instalado v1.5.0"],prev:"1.4.0",ingresos:0,score:0},
 ];
 const DEF_RENOV: Renovacion[] = [
-  {id:"r1",nombre:"Dominio jefazo.app",tipo:"dominio",fechaRenovacion:"2026-02-13T00:00:00Z",precio:"14.99\u20AC",notas:"GoDaddy",recordatorioActivado:true,snoozeUntil:null},
+  {id:"r1",nombre:"Dominio central.app",tipo:"dominio",fechaRenovacion:"2026-02-13T00:00:00Z",precio:"14.99\u20AC",notas:"GoDaddy",recordatorioActivado:true,snoozeUntil:null},
   {id:"r2",nombre:"Hosting Vercel Pro",tipo:"hosting",fechaRenovacion:"2026-03-01T00:00:00Z",precio:"20\u20AC/mes",notas:"",recordatorioActivado:true,snoozeUntil:null},
   {id:"r3",nombre:"API OpenAI",tipo:"api",fechaRenovacion:"2026-02-11T00:00:00Z",precio:"50\u20AC",notas:"Plan Plus",recordatorioActivado:true,snoozeUntil:null},
 ];
@@ -373,7 +373,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
   const [error,setError]=useState("");
   const doLogin=()=>{
     if(loading)return;
-    const userOk=u.trim().toLowerCase()==="el jefazo";
+      const userOk=u.trim().toLowerCase()==="central";
     const passOk=pw==="berzosa15031980";
     if(!userOk||!passOk){
       SFX.error();setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
@@ -409,7 +409,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
       {/* BUGATTI - original size, just flipped */}
       <div style={{width:"92%",maxWidth:400,position:"relative",animation:"fadeUp 0.5s ease-out 0.1s both",flexShrink:1,minHeight:0,zIndex:1,marginTop:"-1.5vh"}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={BUGATTI_IMG} alt="El Jefazo" style={{width:"100%",height:"auto",display:"block",borderRadius:12,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
+        <img src={BUGATTI_IMG} alt="Central v2.0" style={{width:"100%",height:"auto",display:"block",borderRadius:12,filter:"brightness(1.1) contrast(1.08) saturate(1.12)",transform:"scaleX(-1)"}}/>
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:"25%",borderRadius:"0 0 12px 12px",background:"linear-gradient(transparent,#000a1a)"}}/>
       </div>
 
@@ -1071,7 +1071,7 @@ const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renov
 // ═══════════════════════════════════════════════════════════════
 // MAIN APP
 // ══════════════════════════════════════════════════════════���════
-export default function JefazoOS() {
+export default function CentralV2() {
   const [scr, setScr] = useState("login");
   const [scrArg, setScrArg] = useState<string | null>(null);
   const [anim, setAnim] = useState(false);
@@ -1150,7 +1150,7 @@ export default function JefazoOS() {
     const data = { clones, renovaciones, gs, adminSettings, comms: { phone: LS.get("comms_ph", "") as string, email: LS.get("comms_em", "") as string }, version: APP_VERSION, exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `jefazo-backup-${Date.now()}.json`; a.click();
+      const a = document.createElement("a"); a.href = url; a.download = `central-backup-${Date.now()}.json`; a.click();
     URL.revokeObjectURL(url);
     show("Backup exportado");
   }, [clones, renovaciones, gs, adminSettings, show]);

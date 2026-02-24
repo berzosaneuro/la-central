@@ -60,7 +60,7 @@ export function AdminDashboard() {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">El Jefazo OS - Admin</h1>
+          <h1 className="text-4xl font-bold text-white mb-4">Central v2.0 - Admin</h1>
           <p className="text-slate-400">Cargando...</p>
         </div>
       </div>

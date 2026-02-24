@@ -13,7 +13,7 @@ export function initializeAdminSystem() {
   const allUsers = AuthService.getAllUsers();
   if (allUsers.length === 0) {
     const superAdmin = AuthService.createUser(
-      'admin@jefazo.local',
+      'admin@central.local',
       'Super Admin',
       UserRole.SUPER_ADMIN
     );
@@ -36,7 +36,7 @@ export function initializeAdminSystem() {
     NotificationService.createNotification(
       superAdmin.id,
       NotificationType.SUCCESS,
-      'Bienvenido a El Jefazo OS',
+      'Bienvenido a Central v2.0',
       'Sistema de administración inicializado correctamente',
       { type: 'system' }
     );
@@ -44,7 +44,7 @@ export function initializeAdminSystem() {
 
   // Initialize default configurations
   const defaultConfigs = [
-    { key: 'system_name', value: 'El Jefazo OS', description: 'Nombre del sistema' },
+    { key: 'system_name', value: 'Central v2.0', description: 'Nombre del sistema' },
     { key: 'system_version', value: '2.0.0', description: 'Versión actual' },
     { key: 'theme_mode', value: 'dark', description: 'Modo de tema' },
     { key: 'language', value: 'es', description: 'Idioma predeterminado' },

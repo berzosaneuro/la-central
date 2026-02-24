@@ -1,8 +1,8 @@
-# El Jefazo OS v2.0 - Sistema de Administración Avanzado
+# Central v2.0 - Sistema de Administración Avanzado
 
 ## 📊 Resumen Ejecutivo
 
-Se ha construido un **sistema de administración empresarial completo y modular** para El Jefazo OS, con toda la infraestructura lista para escalar y conectar servicios externos.
+Se ha construido un **sistema de administración empresarial completo y modular** para Central v2.0, con toda la infraestructura lista para escalar y conectar servicios externos.
 
 ### Lo Que Se Implementó ✅
 

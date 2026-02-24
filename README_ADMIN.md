@@ -1,6 +1,6 @@
-# El Jefazo OS v2.0 - Advanced Administration System
+# Central v2.0 - Advanced Administration System
 
-**Sistema de Administración Empresarial Completo para El Jefazo OS**
+**Sistema de Administración Empresarial Completo para Central v2.0**
 
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
 ![Version](https://img.shields.io/badge/Version-2.0.0-blue)
@@ -8,7 +8,7 @@
 
 ## 🎯 Descripción
 
-El Jefazo OS v2.0 es un **sistema de administración avanzado, modular y escalable** diseñado para gestionar clones, renovaciones y sonidos con características empresariales como:
+Central v2.0 es un **sistema de administración avanzado, modular y escalable** diseñado para gestionar clones, renovaciones y sonidos con características empresariales como:
 
 - Dashboard centralizado con estadísticas en tiempo real
 - Control de acceso basado en roles (RBAC) con 5 niveles
@@ -54,7 +54,7 @@ npm run dev
 
 ### Usuario por Defecto
 ```
-Email: admin@jefazo.local
+Email: admin@central.local
 Rol: SUPER_ADMIN
 ```
 
@@ -322,11 +322,11 @@ Las contribuciones son bienvenidas. Por favor:
 
 ## 🙏 Reconocimientos
 
-Construcción del sistema admin completo para El Jefazo OS v2.0, con arquitectura profesional y lista para escalar.
+Construcción del sistema admin completo para Central v2.0, con arquitectura profesional y lista para escalar.
 
 ---
 
-**¿Listo para llevar El Jefazo OS al siguiente nivel?**
+**¿Listo para llevar Central v2.0 al siguiente nivel?**
 
 1. Comienza con [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)
 2. Conecta una base de datos

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import JefazoOS from '@/components/jefazo-os';
+import CentralV2 from '@/components/central-v2';
 import { useState } from 'react';
 
 export default function Home() {
@@ -34,7 +34,7 @@ export default function Home() {
             </div>
             <div className="text-xs text-slate-400">
               <p>Usuarios de prueba:</p>
-              <p>• admin@jefazo.local (Super Admin)</p>
+              <p>• admin@central.local (Super Admin)</p>
               <p>• admin@example.com (Admin)</p>
             </div>
           </div>
@@ -42,7 +42,7 @@ export default function Home() {
       )}
 
       {/* Main Component */}
-      <JefazoOS />
+      <CentralV2 />
     </div>
   );
 }

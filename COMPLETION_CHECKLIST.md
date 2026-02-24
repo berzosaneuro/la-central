@@ -1,4 +1,4 @@
-# El Jefazo OS v2.0 - Implementation Checklist
+# Central v2.0 - Implementation Checklist
 
 ## ✅ COMPLETADO - Sistema de Administración Avanzado
 
@@ -325,7 +325,7 @@ docker build -t jefazo-os .
 
 ## ✨ Resumen
 
-**El Jefazo OS v2.0 es una plataforma de administración profesional, modular y lista para producción.**
+**Central v2.0 es una plataforma de administración profesional, modular y lista para producción.**
 
 ```
 Código:       2,939 líneas

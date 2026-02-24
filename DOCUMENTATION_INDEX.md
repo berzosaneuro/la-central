@@ -1,4 +1,4 @@
-# El Jefazo OS v2.0 - Documentación Completa
+# Central v2.0 - Documentación Completa
 
 ## 🎯 Guía de Navegación
 
@@ -119,7 +119,7 @@
 ## 🗺️ Mapa Mental del Proyecto
 
 ```
-El Jefazo OS v2.0
+Central v2.0
 ├── CORE MODULES (11)
 │   ├── types.ts
 │   ├── auth.ts (RBAC)

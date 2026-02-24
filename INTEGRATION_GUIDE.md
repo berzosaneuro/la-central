@@ -1,4 +1,4 @@
-# Guía de Integración - El Jefazo OS
+# Guía de Integración - Central v2.0
 
 ## 🎯 Próximas Pasos para Conectar Servicios
 

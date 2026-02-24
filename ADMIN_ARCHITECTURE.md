@@ -1,8 +1,8 @@
-# El Jefazo OS - Arquitectura de Administración
+# Central v2.0 - Arquitectura de Administración
 
 ## Descripción General
 
-El Jefazo OS ahora incluye un sistema de administración avanzado y modular diseñado para facilitar la gestión centralizada, auditoría, y escalabilidad del sistema.
+Central v2.0 ahora incluye un sistema de administración avanzado y modular diseñado para facilitar la gestión centralizada, auditoría, y escalabilidad del sistema.
 
 ## Estructura del Sistema
 

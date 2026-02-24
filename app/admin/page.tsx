@@ -18,7 +18,7 @@ export default function AdminPage() {
       <nav className="border-b border-slate-700 bg-slate-800/50 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-white">El Jefazo OS</h1>
+            <h1 className="text-2xl font-bold text-white">Central v2.0</h1>
             <p className="text-slate-400 text-xs">Panel de Administración Avanzado</p>
           </div>
           <div className="flex items-center gap-6">
@@ -46,7 +46,7 @@ export default function AdminPage() {
         {/* Footer */}
         <div className="mt-12 pt-8 border-t border-slate-700">
           <p className="text-slate-400 text-sm text-center">
-            El Jefazo OS v2.0.0 • {new Date().getFullYear()} • Administración Centralizada
+            Central v2.0 • {new Date().getFullYear()} • Administración Centralizada
           </p>
         </div>
       </div>
