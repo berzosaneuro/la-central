@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { collection, doc, setDoc, getDocs, getDoc, deleteDoc } from "firebase/firestore";
-import { isFirebaseConfigured, getDb } from "@/lib/firebase";
+import { DB } from "@/lib/db";
 
 // ═══════════════════════════════════════════════════════════════
 // EL JEFAZO OS v5.1.0 — MASTER CONTROL PWA (Next.js Build)
@@ -474,7 +473,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
 // ═══════════════════════════════════════════════════════════════
 // ECOSYSTEM SCREEN (DASHBOARD)
 // ═══════════════════════════════════════════════════════════════
-const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clone[]; renovaciones: Renovacion[]; nav: (to: string, arg?: string | null) => void; toast: (msg: string) => void; onSync: (id: string) => void; onUpdate: (id: string) => void}) => {
+const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate,cloudSync}: {clones: Clone[]; renovaciones: Renovacion[]; nav: (to: string, arg?: string | null) => void; toast: (msg: string) => void; onSync: (id: string) => void; onUpdate: (id: string) => void; cloudSync?: "idle"|"syncing"|"ok"|"error"}) => {
   const [search,setSearch]=useState("");const [filter,setFilter]=useState("all");
   const activos=clones.filter(c=>c.estado==="ACTIVO").length;
   const updates=clones.filter(c=>semver.gt(c.vd,c.vi)).length;
@@ -497,7 +496,13 @@ const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clo
           <HudStat label="Off" value={clones.length-activos} color={T.gray}/><HudStat label="Actualizaciones" value={updates} color={updates>0?T.orange:T.neon}/>
           <HudStat label="Ingresos" value={`${totalIngresos}\u20AC`} color={T.neonBright}/>
         </div>
-        <div style={{marginTop:10,textAlign:"center"}}><Badge text={`SISTEMA: ${gStatus}`} color={gColor}/></div>
+        <div style={{marginTop:10,textAlign:"center",display:"flex",gap:8,justifyContent:"center",alignItems:"center"}}>
+          <Badge text={`SISTEMA: ${gStatus}`} color={gColor}/>
+          {cloudSync==="syncing"&&<Badge text="☁ SYNC..." color={T.neon}/>}
+          {cloudSync==="ok"&&<Badge text="☁ CLOUD ✓" color={T.green}/>}
+          {cloudSync==="error"&&<Badge text="☁ SIN CLOUD" color={T.orange}/>}
+          {(cloudSync==="idle"||!cloudSync)&&<Badge text="☁ LOCAL" color={T.gray}/>}
+        </div>
       </Card></div>
       {/* Search */}
       <div style={{animation:"stagger 0.35s ease-out 0.08s both"}}>
@@ -946,29 +951,25 @@ const AdminPanel = ({back,toast,clones,gs,activity,adminSettings,setAdminSetting
 
 
 // ═══════════════════════════════════════════════════════════════
-// INSIGHTS IA SCREEN
+// INSIGHTS IA SCREEN — con chat OpenAI real
 // ═══════════════════════════════════════════════════════════════
-const InsightsPanel = ({back,toast,clones}: {back: () => void; toast: (msg: string) => void; clones: Clone[]}) => {
+interface AiMessage { role: "user"|"assistant"; content: string; }
+
+const InsightsPanel = ({back,toast,clones,renovaciones}: {back: () => void; toast: (msg: string) => void; clones: Clone[]; renovaciones: Renovacion[]}) => {
   const insights = useMemo(() => {
     const msgs: {type: "warn"|"ok"|"info"; msg: string; action?: string; cloneId?: string}[] = [];
-    // Low performance clones
     const lowPerf = clones.filter(c => calcScore(c) < 40);
     if(lowPerf.length > 0) msgs.push({type:"warn",msg:`${lowPerf.length} clon${lowPerf.length>1?"es":""} con bajo rendimiento`,action:"Revisar actividad",cloneId:lowPerf[0].id});
-    // Inactive clones
     const inactive = clones.filter(c => c.estado === "INACTIVO");
     if(inactive.length > 0) msgs.push({type:"warn",msg:`${inactive.length} clon${inactive.length>1?"es":""} inactivo${inactive.length>1?"s":""}`,action:"Activar",cloneId:inactive[0].id});
-    // High performance
     const highPerf = clones.filter(c => calcScore(c) >= 70);
     if(highPerf.length > 0) msgs.push({type:"ok",msg:`${highPerf.length} clon${highPerf.length>1?"es":""} con alto rendimiento`});
-    // Updates available
     const needsUpdate = clones.filter(c => semver.gt(c.vd, c.vi));
     if(needsUpdate.length > 0) msgs.push({type:"info",msg:`${needsUpdate.length} actualizaci\u00F3n${needsUpdate.length>1?"es":""} disponible${needsUpdate.length>1?"s":""}`,action:"Actualizar"});
-    // Revenue insights
     const totalRev = clones.reduce((s,c) => s + (c.ingresos||0), 0);
     const topClone = [...clones].sort((a,b) => (b.ingresos||0) - (a.ingresos||0))[0];
     if(topClone && (topClone.ingresos||0) > 0) msgs.push({type:"ok",msg:`${topClone.name} es el clon m\u00E1s rentable (${topClone.ingresos}\u20AC)`,cloneId:topClone.id});
     if(totalRev === 0) msgs.push({type:"warn",msg:"Ning\u00FAn clon est\u00E1 generando ingresos"});
-    // Offline servers
     const offline = clones.filter(c => c.server === "OFFLINE");
     if(offline.length > 0) msgs.push({type:"warn",msg:`${offline.length} servidor${offline.length>1?"es":""} offline`,action:"Revisar"});
     if(msgs.length === 0) msgs.push({type:"ok",msg:"Todo funciona correctamente. Sin alertas."});
@@ -976,11 +977,56 @@ const InsightsPanel = ({back,toast,clones}: {back: () => void; toast: (msg: stri
   }, [clones]);
 
   const typeColor = {warn:T.orange,ok:T.green,info:T.neon};
-  const typeIcon = {warn:"\u26A0\uFE0F",ok:"\u2705",info:"\u2139\uFE0F"};
+  const typeIcon  = {warn:"\u26A0\uFE0F",ok:"\u2705",info:"\u2139\uFE0F"};
+
+  // ── Chat IA ───────────────────────────────────────────────
+  const [aiMessages, setAiMessages] = useState<AiMessage[]>([]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { chatRef.current?.scrollTo(0, chatRef.current.scrollHeight); }, [aiMessages]);
+
+  const sendAI = useCallback(async (text?: string) => {
+    const msg = (text ?? aiInput).trim();
+    if (!msg || aiLoading) return;
+    setAiInput("");
+    const next: AiMessage[] = [...aiMessages, {role:"user", content:msg}];
+    setAiMessages(next);
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/ai", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          messages: next,
+          context: {
+            clones: clones.map(c=>({name:c.name,estado:c.estado,ingresos:c.ingresos||0,score:calcScore(c),server:c.server})),
+            totalIngresos: clones.reduce((s,c)=>s+(c.ingresos||0),0),
+            activosCount: clones.filter(c=>c.estado==="ACTIVO").length,
+            renovacionesUrgentes: renovaciones.filter(r=>{const e=renovEstado(r);return e==="CRITICO"||e==="VENCIDO";}).map(r=>r.nombre),
+          },
+        }),
+      });
+      const data = await res.json();
+      if(data.error) { toast(data.error); setAiMessages(p=>[...p,{role:"assistant",content:`\u26A0\uFE0F ${data.error}`}]); }
+      else setAiMessages(p=>[...p,{role:"assistant",content:data.reply}]);
+    } catch { toast("Error de conexi\u00F3n con IA"); setAiMessages(p=>[...p,{role:"assistant",content:"\u26A0\uFE0F Sin conexi\u00F3n"}]); }
+    setAiLoading(false);
+  }, [aiInput, aiMessages, aiLoading, clones, renovaciones, toast]);
+
+  const quickQuestions = [
+    "\u00BFQu\u00E9 clones necesitan atenci\u00F3n?",
+    "\u00BFC\u00F3mo aumento los ingresos?",
+    "\u00BFQu\u00E9 renovaciones son urgentes?",
+    "Dame un resumen del sistema",
+  ];
 
   return <Screen>
     <Header title="INSIGHTS IA" sub="Inteligencia del sistema" back={back} icon={"\uD83E\uDDE0"}/>
     <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:12,zIndex:1}}>
+
+      {/* HUD análisis */}
       <Card neon glow={0.6}><Label>{"An\u00E1lisis del Ecosistema"}</Label>
         <div style={{display:"flex",justifyContent:"space-around",padding:"4px 0"}}>
           <HudStat label="Alertas" value={insights.filter(i=>i.type==="warn").length} color={T.orange}/>
@@ -989,6 +1035,7 @@ const InsightsPanel = ({back,toast,clones}: {back: () => void; toast: (msg: stri
         </div>
       </Card>
 
+      {/* Insights automáticos */}
       {insights.map((ins,i) => (
         <div key={i} style={{animation:`stagger 0.3s ease-out ${0.05+i*0.04}s both`}}>
           <Card neonColor={ins.type==="warn"?T.orange:undefined} neon={ins.type==="warn"}>
@@ -996,23 +1043,64 @@ const InsightsPanel = ({back,toast,clones}: {back: () => void; toast: (msg: stri
               <span style={{fontSize:18,flexShrink:0,marginTop:2}}>{typeIcon[ins.type]}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:700,color:T.white,marginBottom:4}}>{ins.msg}</div>
-                {ins.action && (
-                  <Btn h={32} fs={9} glow={0.4} neonColor={typeColor[ins.type]} onClick={()=>toast(`Acci\u00F3n: ${ins.action}`)}>{ins.action.toUpperCase()}</Btn>
-                )}
+                {ins.action && <Btn h={32} fs={9} glow={0.4} neonColor={typeColor[ins.type]} onClick={()=>toast(`Acci\u00F3n: ${ins.action}`)}>{ins.action.toUpperCase()}</Btn>}
               </div>
             </div>
           </Card>
         </div>
       ))}
 
-      {/* Automation rules info */}
-      <Card><Label>Reglas de automatizacion</Label>
-        <div style={{fontSize:11,color:T.grayLight,lineHeight:1.8}}>
-          <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}><Badge text="REGLA" color={T.orange}/><span>Si rendimiento {'<'} 40 → Alerta autom\u00E1tica</span></div>
-          <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}><Badge text="REGLA" color={T.red}/><span>Si inactivo → Marcar como inactivo</span></div>
-          <div style={{display:"flex",gap:6,alignItems:"center"}}><Badge text="REGLA" color={T.green}/><span>Si rendimiento {'>'} 70 → Destacar clon</span></div>
+      {/* Chat IA real */}
+      <Card neon glow={0.8} neonColor={T.electric}>
+        <Label>{"CONSULTAR A LA IA \u2014 GPT-4o mini"}</Label>
+
+        {/* Historial de chat */}
+        {aiMessages.length > 0 && (
+          <div ref={chatRef} style={{maxHeight:260,overflowY:"auto",display:"flex",flexDirection:"column",gap:8,marginBottom:10,padding:"4px 0"}}>
+            {aiMessages.map((m,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+                <div style={{maxWidth:"82%",padding:"8px 12px",borderRadius:m.role==="user"?"12px 12px 2px 12px":"12px 12px 12px 2px",
+                  background:m.role==="user"?`linear-gradient(135deg,#0A4080,#062858)`:`linear-gradient(135deg,#0A1E30,#060E1C)`,
+                  border:`1px solid ${m.role==="user"?T.electric+"55":T.border+"44"}`,
+                  fontSize:12,color:T.white,lineHeight:1.5,wordBreak:"break-word",
+                  boxShadow:m.role==="user"?`0 0 12px ${T.electric}22`:"none"}}>
+                  {m.content}
+                </div>
+              </div>
+            ))}
+            {aiLoading&&<div style={{display:"flex",justifyContent:"flex-start"}}>
+              <div style={{padding:"8px 14px",borderRadius:"12px 12px 12px 2px",background:"linear-gradient(135deg,#0A1E30,#060E1C)",border:`1px solid ${T.border}44`,fontSize:12,color:T.gray}}>
+                <span style={{animation:"pulse3d 1s ease-in-out infinite",display:"inline-block"}}>Pensando...</span>
+              </div>
+            </div>}
+          </div>
+        )}
+
+        {/* Preguntas rápidas */}
+        {aiMessages.length === 0 && (
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+            {quickQuestions.map((q,i)=>(
+              <button key={i} onClick={()=>sendAI(q)}
+                style={{fontSize:10,padding:"5px 10px",borderRadius:8,background:"rgba(0,120,200,0.12)",border:`1px solid ${T.border}55`,color:T.grayLight,cursor:"pointer",fontFamily:"'Rajdhani',sans-serif",fontWeight:600,letterSpacing:"0.04em"}}>
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Input */}
+        <div style={{display:"flex",gap:8}}>
+          <input value={aiInput} onChange={e=>setAiInput(e.target.value)}
+            onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAI();}}}
+            placeholder="Pregunta sobre tus clones..."
+            style={{flex:1,height:40,background:"#060E1C",border:`1.5px solid ${T.border}`,borderRadius:9,color:T.white,fontSize:12,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",padding:"0 12px",outline:"none"}}/>
+          <button onClick={()=>sendAI()} disabled={aiLoading||!aiInput.trim()}
+            style={{width:40,height:40,borderRadius:9,border:`1.5px solid ${T.electric}55`,background:`linear-gradient(135deg,#0A3058,#06183A)`,color:T.electric,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",opacity:aiLoading||!aiInput.trim()?0.4:1}}>
+            {"\u27A4"}
+          </button>
         </div>
       </Card>
+
       <div style={{height:70}}/>
     </div>
   </Screen>;
@@ -1088,65 +1176,37 @@ export default function JefazoOS() {
   const [activity] = useState<ActivityLog[]>(DEF_ACTIVITY);
   const [critAlert, setCritAlert] = useState<Renovacion | null>(null);
   const [alertDismissed, setAlertDismissed] = useState(false);
+  const [cloudSync, setCloudSync] = useState<"idle"|"syncing"|"ok"|"error">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
-  const fbReady = useRef(false);
-  const prevClonesRef = useRef<Clone[]>([]);
-  const prevRenovRef = useRef<Renovacion[]>([]);
-  const [fbSeed, setFbSeed] = useState(0);
 
-  // ── FIREBASE INIT (carga datos de Firestore al entrar) ───
+  // ── FIREBASE: carga inicial + suscripción en tiempo real ──
   useEffect(() => {
-    if (scr === "login" || fbReady.current || !isFirebaseConfigured()) return;
-    const db = getDb();
-    Promise.all([
-      getDocs(collection(db, "clones")),
-      getDocs(collection(db, "renovaciones")),
-      getDoc(doc(db, "config", "globalState")),
-      getDoc(doc(db, "config", "adminSettings")),
-    ]).then(([clonesSnap, renovSnap, gsSnap, adminSnap]) => {
-      if (!clonesSnap.empty) { const d=clonesSnap.docs.map(x=>x.data() as Clone); prevClonesRef.current=d; setClones(d); }
-      if (!renovSnap.empty) { const d=renovSnap.docs.map(x=>x.data() as Renovacion); prevRenovRef.current=d; setRenovaciones(d); }
-      if (gsSnap.exists()) setGs(gsSnap.data() as GlobalState);
-      if (adminSnap.exists()) setAdminSettings(adminSnap.data() as AdminSettings);
-    }).catch(e => console.warn("Firebase load error:", e))
-      .finally(() => { fbReady.current = true; setFbSeed(s => s + 1); });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scr]);
+    if (!DB.isConnected) return;
+    setCloudSync("syncing");
+    DB.loadAll().then(data => {
+      if (data) {
+        if (data.clones)        setClones(data.clones as Clone[]);
+        if (data.renovaciones)  setRenovaciones(data.renovaciones as Renovacion[]);
+        if (data.globalState)   setGs(data.globalState as GlobalState);
+        if (data.adminSettings) setAdminSettings(data.adminSettings as AdminSettings);
+      }
+      setCloudSync("ok");
+    }).catch(() => setCloudSync("error"));
 
-  // ── PERSIST (localStorage + Firestore) ───────────────────
-  useEffect(() => {
-    LS.set("clones", clones);
-    if (!fbReady.current || !isFirebaseConfigured()) { prevClonesRef.current = clones; return; }
-    const db = getDb();
-    prevClonesRef.current.filter(c => !clones.find(x => x.id === c.id)).forEach(c => deleteDoc(doc(db, "clones", c.id)).catch(console.error));
-    clones.forEach(c => setDoc(doc(db, "clones", c.id), c).catch(console.error));
-    prevClonesRef.current = clones;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clones, fbSeed]);
+    const unsub = DB.subscribe(data => {
+      if (data.clones)        setClones(data.clones as Clone[]);
+      if (data.renovaciones)  setRenovaciones(data.renovaciones as Renovacion[]);
+      if (data.globalState)   setGs(data.globalState as GlobalState);
+      if (data.adminSettings) setAdminSettings(data.adminSettings as AdminSettings);
+    });
+    return () => { unsub?.(); };
+  }, []);
 
-  useEffect(() => {
-    LS.set("renov", renovaciones);
-    if (!fbReady.current || !isFirebaseConfigured()) { prevRenovRef.current = renovaciones; return; }
-    const db = getDb();
-    prevRenovRef.current.filter(r => !renovaciones.find(x => x.id === r.id)).forEach(r => deleteDoc(doc(db, "renovaciones", r.id)).catch(console.error));
-    renovaciones.forEach(r => setDoc(doc(db, "renovaciones", r.id), r).catch(console.error));
-    prevRenovRef.current = renovaciones;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renovaciones, fbSeed]);
-
-  useEffect(() => {
-    LS.set("gs", gs);
-    if (!fbReady.current || !isFirebaseConfigured()) return;
-    setDoc(doc(getDb(), "config", "globalState"), gs).catch(console.error);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gs, fbSeed]);
-
-  useEffect(() => {
-    LS.set("adminSettings", adminSettings);
-    if (!fbReady.current || !isFirebaseConfigured()) return;
-    setDoc(doc(getDb(), "config", "adminSettings"), adminSettings).catch(console.error);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminSettings, fbSeed]);
+  // ── PERSIST — localStorage + Firebase (doble escritura) ──
+  useEffect(() => { LS.set("clones", clones); DB.saveClones(clones); }, [clones]);
+  useEffect(() => { LS.set("renov", renovaciones); DB.saveRenovaciones(renovaciones); }, [renovaciones]);
+  useEffect(() => { LS.set("gs", gs); DB.saveGlobalState(gs); }, [gs]);
+  useEffect(() => { LS.set("adminSettings", adminSettings); DB.saveAdminSettings(adminSettings); }, [adminSettings]);
 
   // ── REQUEST PUSH PERMISSION AFTER LOGIN ──────────────────
   useEffect(() => {
@@ -1225,7 +1285,9 @@ export default function JefazoOS() {
         if (data.gs) setGs(data.gs);
         if (data.adminSettings) setAdminSettings(data.adminSettings);
         if (data.comms) { LS.set("comms_ph", data.comms.phone || ""); LS.set("comms_em", data.comms.email || ""); }
-        show("Backup importado correctamente");
+        // Sincronizar el backup restaurado a Firebase también
+        DB.saveAll({ clones: data.clones, renovaciones: data.renovaciones, globalState: data.gs, adminSettings: data.adminSettings });
+        show("Backup importado y sincronizado");
       } catch { show("Error: JSON inv\u00E1lido"); }
     };
     reader.readAsText(file);
@@ -1244,7 +1306,7 @@ export default function JefazoOS() {
       <input type="file" ref={fileRef} accept=".json" style={{ display: "none" }} onChange={handleImport} />
       <div style={{ width: "100%", height: "100%", animation: dir === "in" ? "slideIn 0.24s cubic-bezier(0.25,0.46,0.45,0.94) both" : "slideOut 0.18s ease-in both" }}>
         {scr === "login" && <LoginScreen go={() => nav("eco")} />}
-        {scr === "eco" && <Ecosystem clones={clones} renovaciones={renovaciones} nav={nav} toast={show} onSync={onSync} onUpdate={onUpdate} />}
+        {scr === "eco" && <Ecosystem clones={clones} renovaciones={renovaciones} nav={nav} toast={show} onSync={onSync} onUpdate={onUpdate} cloudSync={cloudSync} />}
         {scr === "ctrl" && <CloneCtrl clone={currentClone} back={() => nav("eco")} toast={show} updateClone={updateClone} onSync={onSync} onUpdate={onUpdate} />}
         {scr === "addclone" && <AddClone back={() => nav("eco")} toast={show} addClone={addClone} />}
         {scr === "market" && <Marketplace back={() => nav("eco")} toast={show} clones={clones} addClone={addClone} removeClone={removeClone} />}
@@ -1253,7 +1315,7 @@ export default function JefazoOS() {
         {scr === "msg" && <Comunicaciones back={() => nav("eco")} toast={show} />}
         {scr === "share" && <ShareQR back={() => nav("eco")} toast={show} />}
         {scr === "admin" && <AdminPanel back={() => nav("eco")} toast={show} clones={clones} gs={gs} activity={activity} adminSettings={adminSettings} setAdminSettings={setAdminSettings} />}
-        {scr === "insights" && <InsightsPanel back={() => nav("eco")} toast={show} clones={clones} />}
+        {scr === "insights" && <InsightsPanel back={() => nav("eco")} toast={show} clones={clones} renovaciones={renovaciones} />}
         {scr === "emergency" && <EmergencyScreen back={() => nav("eco")} toast={show} clones={clones} updateClone={updateClone} setGs={setGs} />}
       </div>
       <Toast msg={toast.msg} on={toast.on} hide={hide} />
