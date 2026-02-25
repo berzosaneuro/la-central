@@ -1,8 +1,8 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Middleware simple - no hacer nada por ahora
-  return request.response
+  // Solo pasar sin hacer nada
+  return NextResponse.next()
 }
 
 export const config = {
