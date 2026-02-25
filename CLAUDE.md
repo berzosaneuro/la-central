@@ -1,233 +1,233 @@
 # CLAUDE.md — EL JEFAZO OS (la-central)
 
-This file provides guidance for AI assistants (and human developers) working on this codebase.
+Este archivo proporciona orientación para asistentes de IA (y desarrolladores humanos) que trabajen en este repositorio.
 
 ---
 
-## Project Overview
+## Descripción del Proyecto
 
-**EL JEFAZO OS** is a mobile-first Progressive Web App (PWA) built as a master control panel. It manages a fleet of "clones" (deployed application instances), tracks subscriptions/renewals, and provides a centralized command interface — all themed around a futuristic, neon-dark "jefazo" aesthetic.
+**EL JEFAZO OS** es una Progressive Web App (PWA) con diseño mobile-first que funciona como panel de control maestro. Gestiona una flota de "clones" (instancias de aplicaciones desplegadas), hace seguimiento de suscripciones y renovaciones, y ofrece una interfaz de comando centralizada — con una estética futurista de neón oscuro.
 
-The app is entirely client-side. All state is persisted via `localStorage`. No backend API routes or database connections are used in the current implementation.
+La app es completamente del lado del cliente. Todo el estado se persiste mediante `localStorage`. No se utilizan rutas de API backend ni conexiones a base de datos en la implementación actual.
 
 ---
 
-## Tech Stack
+## Stack Tecnológico
 
-| Layer | Technology |
+| Capa | Tecnología |
 |---|---|
 | Framework | Next.js 16 (App Router) |
-| UI Library | React 19 |
-| Language | TypeScript 5 (strict mode) |
-| Styling | Tailwind CSS 4 |
-| Animations | Framer Motion 12 |
-| Notifications | React Hot Toast 2 |
+| Librería UI | React 19 |
+| Lenguaje | TypeScript 5 (modo strict) |
+| Estilos | Tailwind CSS 4 |
+| Animaciones | Framer Motion 12 |
+| Notificaciones | React Hot Toast 2 |
 | OCR | Tesseract.js 7 |
-| Firebase | Firebase 12 + Firebase Admin 13 (configured, not yet active) |
-| Package Manager | pnpm (npm also works) |
+| Firebase | Firebase 12 + Firebase Admin 13 (instalado, aún no activo) |
+| Gestor de paquetes | pnpm (npm también funciona) |
 
 ---
 
-## Directory Structure
+## Estructura de Directorios
 
 ```
 la-central/
 ├── app/
-│   ├── layout.tsx       # Root layout: metadata, PWA config, viewport
-│   ├── page.tsx         # Entry point — renders <JefazoOS />
-│   └── globals.css      # Global styles, Tailwind, CSS variables
+│   ├── layout.tsx       # Layout raíz: metadatos, config PWA, viewport
+│   ├── page.tsx         # Punto de entrada — renderiza <JefazoOS />
+│   └── globals.css      # Estilos globales, Tailwind, variables CSS
 ├── components/
-│   └── jefazo-os.tsx    # Main application (~1,200 lines, all screens)
+│   └── jefazo-os.tsx    # Aplicación principal (~1.200 líneas, todas las pantallas)
 ├── public/
-│   ├── manifest.json    # PWA manifest (name, icons, theme)
-│   ├── bugatti.jpg      # Login screen background image
-│   ├── icon-192.png     # PWA icon
-│   └── icon-512.png     # PWA icon
-├── next.config.ts       # Next.js config (minimal, extend as needed)
-├── tsconfig.json        # TypeScript config (strict, path alias @/*)
-├── eslint.config.mjs    # ESLint (Next.js + TypeScript rules)
-└── postcss.config.mjs   # PostCSS with Tailwind
+│   ├── manifest.json    # Manifiesto PWA (nombre, iconos, tema)
+│   ├── bugatti.jpg      # Imagen de fondo de la pantalla de login
+│   ├── icon-192.png     # Icono PWA
+│   └── icon-512.png     # Icono PWA
+├── next.config.ts       # Config de Next.js (mínima, ampliar según necesidad)
+├── tsconfig.json        # Config TypeScript (strict, alias de ruta @/*)
+├── eslint.config.mjs    # ESLint (reglas Next.js + TypeScript)
+└── postcss.config.mjs   # PostCSS con Tailwind
 ```
 
 ---
 
-## Key Source File: `components/jefazo-os.tsx`
+## Archivo Clave: `components/jefazo-os.tsx`
 
-This single file contains the entire application. It is organized as follows:
+Este único archivo contiene toda la aplicación. Se organiza de la siguiente manera:
 
-### Data Interfaces
-- `Renovacion` — subscription/renewal item (domain, hosting, API keys, etc.)
-- `Clone` — a deployed app instance (version, status, server, income, score)
-- `GlobalState` — master switches (master on/off, maintenance, emergency, autoUpdate)
-- `AdminSettings` — phone & email for contact
-- `ActivityLog` — timestamped system event
+### Interfaces de Datos
+- `Renovacion` — elemento de suscripción/renovación (dominio, hosting, claves API, etc.)
+- `Clone` — instancia de app desplegada (versión, estado, servidor, ingresos, puntuación)
+- `GlobalState` — interruptores maestros (master on/off, mantenimiento, emergencia, autoUpdate)
+- `AdminSettings` — teléfono y email de contacto
+- `ActivityLog` — evento del sistema con marca de tiempo
 
-### Utility Functions
-| Function | Purpose |
+### Funciones de Utilidad
+| Función | Propósito |
 |---|---|
-| `LS` | `localStorage` wrapper with namespaced keys (`jz_*`) |
-| `semver` | Parse and compare semantic version strings |
-| `daysUntil()` | Days remaining until a date |
-| `fmtDate()` / `fmtDT()` | Date formatting (Spanish locale) |
-| `calcScore()` | Clone health score (0–100) |
-| `renovEstado()` | Renewal status: `OK`, `PROXIMO`, `CRITICO`, `VENCIDO`, `SNOOZED` |
+| `LS` | Wrapper de `localStorage` con claves con prefijo (`jz_*`) |
+| `semver` | Parsear y comparar cadenas de versión semántica |
+| `daysUntil()` | Días restantes hasta una fecha |
+| `fmtDate()` / `fmtDT()` | Formateo de fechas (locale español) |
+| `calcScore()` | Puntuación de salud del clone (0–100) |
+| `renovEstado()` | Estado de renovación: `OK`, `PROXIMO`, `CRITICO`, `VENCIDO`, `SNOOZED` |
 
-### Audio System (`SFX`)
-Synthesized sounds via the Web Audio API (no audio files). Keys: `login`, `notify`, `error`, `click`, `alert`, `success`.
+### Sistema de Audio (`SFX`)
+Sonidos sintetizados mediante la Web Audio API (sin archivos de audio). Claves: `login`, `notify`, `error`, `click`, `alert`, `success`.
 
-### Color Theme (`T` object)
-Centralized color constants:
-- Primary: `#00C8FF` (neon blue), `#3A9FFF` (electric blue)
-- Backgrounds: `#000410` (dark), `#0A1628` (card)
-- Status: `#00FF80` (green), `#FFA040` (orange), `#FF4466` (red)
+### Tema de Color (objeto `T`)
+Constantes de color centralizadas:
+- Primarios: `#00C8FF` (azul neón), `#3A9FFF` (azul eléctrico)
+- Fondos: `#000410` (oscuro), `#0A1628` (tarjeta)
+- Estado: `#00FF80` (verde), `#FFA040` (naranja), `#FF4466` (rojo)
 
-### Reusable UI Components
+### Componentes UI Reutilizables
 `NeonBorder`, `Btn`, `Card`, `InputField`, `Toggle`, `Toast`, `Label`, `Badge`, `HudStat`, `ScoreBar`, `Header`, `Screen`, `Modal`, `QuickActions`
 
-### Application Screens
-| Screen | Route Key | Description |
+### Pantallas de la Aplicación
+| Pantalla | Clave de ruta | Descripción |
 |---|---|---|
-| `LoginScreen` | — | Auth gate with metallic 3D effects |
-| `Ecosystem` | `ecosystem` | Master dashboard, clone list & HUD |
-| `CloneCtrl` | `clone` | Per-clone controls, metrics, actions |
-| `AddClone` | `addClone` | Form to create a new clone |
-| `Marketplace` | `marketplace` | Install predefined clone templates |
-| `CentroMando` | `centroMando` | Global switches, backup/import |
-| `Renovaciones` | `renovaciones` | Subscription renewal tracker |
-| `Comunicaciones` | `comms` | WhatsApp/email message templates |
-| `ShareQR` | `share` | QR code & link sharing |
-| `AdminPanel` | `admin` | Aggregated metrics and activity log |
-| `InsightsPanel` | `insights` | Auto-generated AI-style recommendations |
-| `EmergencyScreen` | `emergency` | System-wide emergency actions |
-| `CriticalAlert` | overlay | Modal alert for expired/critical renewals |
+| `LoginScreen` | — | Acceso con efectos metálicos 3D |
+| `Ecosystem` | `ecosystem` | Dashboard principal, lista de clones y HUD |
+| `CloneCtrl` | `clone` | Controles por clone, métricas y acciones |
+| `AddClone` | `addClone` | Formulario para crear un nuevo clone |
+| `Marketplace` | `marketplace` | Instalar plantillas de clones predefinidos |
+| `CentroMando` | `centroMando` | Interruptores globales, copia de seguridad/importar |
+| `Renovaciones` | `renovaciones` | Seguimiento de renovaciones de suscripciones |
+| `Comunicaciones` | `comms` | Plantillas de mensajes WhatsApp/email |
+| `ShareQR` | `share` | Compartir enlace y código QR |
+| `AdminPanel` | `admin` | Métricas agregadas y registro de actividad |
+| `InsightsPanel` | `insights` | Recomendaciones automáticas tipo IA |
+| `EmergencyScreen` | `emergency` | Acciones de emergencia a nivel de sistema |
+| `CriticalAlert` | overlay | Modal de alerta para renovaciones caducadas o críticas |
 
-### Main Component (`JefazoOS`)
-- Single top-level state object
-- Navigation via `screen` state string + `slideDir` for animation direction
-- Monitors for critical renewals on every state change
-- Imports/exports state as JSON
+### Componente Principal (`JefazoOS`)
+- Estado único en el nivel superior
+- Navegación mediante el string `screen` + `slideDir` para la dirección de animación
+- Monitorea renovaciones críticas en cada cambio de estado
+- Importa/exporta el estado completo como JSON
 
 ---
 
-## LocalStorage Keys
+## Claves de LocalStorage
 
-All keys are prefixed with `jz_`:
+Todas las claves tienen el prefijo `jz_`:
 
-| Key | Contents |
+| Clave | Contenido |
 |---|---|
-| `jz_clones` | Array of `Clone` objects |
-| `jz_renov` | Array of `Renovacion` objects |
-| `jz_gs` | `GlobalState` object |
-| `jz_adminSettings` | Admin phone & email |
-| `jz_comms_ph` | WhatsApp number (Comunicaciones) |
-| `jz_comms_em` | Email address (Comunicaciones) |
-| `jz_share_url` | Deployment URL (ShareQR) |
+| `jz_clones` | Array de objetos `Clone` |
+| `jz_renov` | Array de objetos `Renovacion` |
+| `jz_gs` | Objeto `GlobalState` |
+| `jz_adminSettings` | Teléfono y email del admin |
+| `jz_comms_ph` | Número de WhatsApp (Comunicaciones) |
+| `jz_comms_em` | Dirección de email (Comunicaciones) |
+| `jz_share_url` | URL de despliegue (ShareQR) |
 
 ---
 
-## Development Workflow
+## Flujo de Desarrollo
 
-### Setup
+### Instalación
 ```bash
-pnpm install       # Install dependencies
-pnpm dev           # Start dev server at http://localhost:3000
+pnpm install       # Instalar dependencias
+pnpm dev           # Iniciar servidor de desarrollo en http://localhost:3000
 ```
 
-### Build & Lint
+### Build y Lint
 ```bash
-pnpm build         # Production build (outputs to .next/)
-pnpm start         # Serve production build
-pnpm lint          # Run ESLint
+pnpm build         # Build de producción (genera .next/)
+pnpm start         # Servir build de producción
+pnpm lint          # Ejecutar ESLint
 ```
 
-### No Tests
-There is currently no test framework. If adding tests, prefer Vitest (compatible with Next.js and the existing TypeScript config).
+### Sin Tests
+Actualmente no hay framework de tests configurado. Si se añaden, se recomienda Vitest (compatible con Next.js y la config TypeScript existente).
 
 ---
 
-## Conventions & Coding Style
+## Convenciones y Estilo de Código
 
 ### TypeScript
-- Strict mode is enabled. All types must be explicit; avoid `any`.
-- Path alias `@/*` maps to the project root.
-- Target: ES2017 — avoid features not supported in that target.
+- El modo strict está activo. Todos los tipos deben ser explícitos; evitar `any`.
+- El alias `@/*` apunta a la raíz del proyecto.
+- Target ES2017 — no usar características no soportadas en ese target.
 
-### Component Patterns
-- Screens are defined as standard React functional components inside `jefazo-os.tsx`.
-- All internal state and navigation live in the parent `JefazoOS` component; screens receive `state` and `setState` (or a setter function) as props.
-- Prefer `useCallback` for handlers passed as props and `useMemo` for derived/computed values.
+### Patrones de Componentes
+- Las pantallas se definen como componentes funcionales de React dentro de `jefazo-os.tsx`.
+- Todo el estado interno y la navegación viven en el componente padre `JefazoOS`; las pantallas reciben `state` y `setState` (o una función setter) como props.
+- Usar `useCallback` para handlers pasados como props y `useMemo` para valores derivados o calculados.
 
-### Styling
-- Tailwind CSS utility classes are the primary styling mechanism.
-- The `T` color constant object is used for all dynamic inline styles (e.g., borders, glow effects).
-- Neon glow effects are applied via `boxShadow` inline styles.
-- Safe area insets (`env(safe-area-inset-*)`) are used for mobile notch/home-bar support.
-- CSS variables in `globals.css`: `--background` (`#000410`), `--foreground` (`#E0F4FF`).
+### Estilos
+- Las clases de utilidad de Tailwind CSS son el mecanismo principal de estilo.
+- El objeto de constantes `T` se usa para todos los estilos inline dinámicos (bordes, efectos glow, etc.).
+- Los efectos de brillo neón se aplican mediante estilos inline `boxShadow`.
+- Los insets de área segura (`env(safe-area-inset-*)`) se usan para soporte de notch/barra de inicio en móvil.
+- Variables CSS en `globals.css`: `--background` (`#000410`), `--foreground` (`#E0F4FF`).
 
-### Language
-- All UI text, labels, and messages are in **Spanish**.
-- Keep new user-facing strings in Spanish to match the existing app.
+### Idioma
+- Todo el texto de la interfaz, etiquetas y mensajes está en **español**.
+- Mantener cualquier nuevo texto visible al usuario en español para ser coherente con la app.
 
 ### Audio
-- Use `SFX.<key>()` to play sounds. Never import audio files.
-- Always wrap `SFX` calls in try/catch — the Web Audio API can throw on some browsers.
+- Usar `SFX.<clave>()` para reproducir sonidos. Nunca importar archivos de audio.
+- Siempre envolver las llamadas a `SFX` en try/catch — la Web Audio API puede lanzar errores en algunos navegadores.
 
-### Notifications
-- Use `react-hot-toast` (`toast.success`, `toast.error`) for transient feedback.
-- Use `PushNotif.send()` for background/push notifications (requires browser permission).
-
----
-
-## PWA Configuration
-
-- Manifest at `public/manifest.json`: app name, icons, theme color `#000410`, display `standalone`.
-- Meta tags in `app/layout.tsx` support iOS standalone mode (`apple-mobile-web-app-capable`).
-- Viewport is locked (no user scaling) — do not change this without considering mobile UX.
+### Notificaciones
+- Usar `react-hot-toast` (`toast.success`, `toast.error`) para feedback transitorio.
+- Usar `PushNotif.send()` para notificaciones push en segundo plano (requiere permiso del navegador).
 
 ---
 
-## External Integrations
+## Configuración PWA
 
-| Service | How Used |
+- Manifiesto en `public/manifest.json`: nombre de la app, iconos, color de tema `#000410`, display `standalone`.
+- Metaetiquetas en `app/layout.tsx` para soporte de modo standalone en iOS (`apple-mobile-web-app-capable`).
+- El viewport está bloqueado (sin escalado del usuario) — no cambiar esto sin considerar la UX en móvil.
+
+---
+
+## Integraciones Externas
+
+| Servicio | Uso |
 |---|---|
-| QR Server | `https://api.qrserver.com/v1/create-qr-code/` — rendered as `<img>` |
-| WhatsApp | `https://wa.me/<number>?text=<msg>` links |
-| Telegram | `https://t.me/share/url?url=...` links |
-| Email | `mailto:` protocol links |
-| Firebase | Installed but not yet wired into active screens |
+| QR Server | `https://api.qrserver.com/v1/create-qr-code/` — renderizado como `<img>` |
+| WhatsApp | Links `https://wa.me/<numero>?text=<msg>` |
+| Telegram | Links `https://t.me/share/url?url=...` |
+| Email | Links con protocolo `mailto:` |
+| Firebase | Instalado pero aún no conectado a las pantallas activas |
 
 ---
 
-## Security Notes (Important)
+## Notas de Seguridad (Importante)
 
-- **Hardcoded credentials** exist in `LoginScreen` (`"EL JEFAZO"` / `"berzosa15031980"`). These are demo-only and **must be replaced** before any real-world deployment.
-- All application data is stored in `localStorage` (client-side, unencrypted). Do not store genuinely sensitive secrets here.
-- Firebase credentials (if added) must be stored in environment variables (`.env.local`), not committed to source control.
-
----
-
-## Firebase (Future Use)
-
-Firebase packages are installed (`firebase`, `firebase-admin`). When integrating:
-- Store config in `.env.local` (Next.js automatically loads this, never committed)
-- Use Next.js API routes (`app/api/`) for admin SDK calls
-- Client SDK can be initialized in a `lib/firebase.ts` utility file
+- Existen **credenciales hardcodeadas** en `LoginScreen` (`"EL JEFAZO"` / `"berzosa15031980"`). Son solo para demo y **deben reemplazarse** antes de cualquier despliegue real.
+- Todos los datos de la aplicación se guardan en `localStorage` (lado del cliente, sin cifrar). No almacenar secretos genuinamente sensibles aquí.
+- Las credenciales de Firebase (cuando se añadan) deben guardarse en variables de entorno (`.env.local`), nunca en el control de versiones.
 
 ---
 
-## Deployment
+## Firebase (Uso Futuro)
 
-The app is a standard Next.js project and can be deployed to:
-- **Vercel** (recommended — zero config)
-- **Netlify** (static export or SSR)
-- **Any Node.js host** via `pnpm build && pnpm start`
-
-No environment variables are required for the current implementation. When Firebase or other services are added, document required vars in a `.env.example` file.
+Los paquetes de Firebase están instalados (`firebase`, `firebase-admin`). Al integrar:
+- Guardar la config en `.env.local` (Next.js lo carga automáticamente, nunca se commitea)
+- Usar rutas de API de Next.js (`app/api/`) para llamadas al SDK de administrador
+- El SDK de cliente puede inicializarse en un archivo utilitario `lib/firebase.ts`
 
 ---
 
-## Git Workflow
+## Despliegue
 
-- The main stable branch is `master`.
-- Feature branches follow the pattern `claude/<description>-<session-id>` for AI-assisted work.
-- Commit messages use conventional style: `feat:`, `fix:`, `chore:`, `refactor:`.
+La app es un proyecto Next.js estándar y puede desplegarse en:
+- **Vercel** (recomendado — configuración cero)
+- **Netlify** (exportación estática o SSR)
+- **Cualquier host Node.js** mediante `pnpm build && pnpm start`
+
+No se requieren variables de entorno para la implementación actual. Cuando se añadan Firebase u otros servicios, documentar las variables necesarias en un archivo `.env.example`.
+
+---
+
+## Flujo de Git
+
+- La rama estable principal es `master`.
+- Las ramas de funcionalidades siguen el patrón `claude/<descripción>-<session-id>` para trabajo asistido por IA.
+- Los mensajes de commit usan el estilo convencional: `feat:`, `fix:`, `chore:`, `refactor:`.
