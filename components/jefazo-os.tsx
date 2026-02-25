@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { collection, doc, setDoc, getDocs, getDoc, deleteDoc } from "firebase/firestore";
+import { isFirebaseConfigured, getDb } from "@/lib/firebase";
 
 // ═══════════════════════════════════════════════════════════════
 // EL JEFAZO OS v5.1.0 — MASTER CONTROL PWA (Next.js Build)
@@ -373,12 +375,14 @@ const LoginScreen = ({go}: {go: () => void}) => {
   const [error,setError]=useState("");
   const doLogin=()=>{
     if(loading)return;
-    const userOk=u.trim().toLowerCase()==="el jefazo";
-    const passOk=pw==="berzosa15031980";
-    if(!userOk||!passOk){
-      SFX.error();setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);return;
-    }
-    setLoading(true);setTimeout(()=>{setGranted(true);SFX.login();setTimeout(()=>go(),1800)},1500);
+    setLoading(true);
+    fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u.trim(),password:pw})})
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.ok){setGranted(true);SFX.login();setTimeout(()=>go(),1800);}
+        else{setLoading(false);SFX.error();setError("CREDENCIALES INCORRECTAS");setTimeout(()=>setError(""),2500);}
+      })
+      .catch(()=>{setLoading(false);SFX.error();setError("ERROR DE CONEXI\u00D3N");setTimeout(()=>setError(""),2500);});
   };
   const handleSubmit=(e: React.FormEvent)=>{e.preventDefault();doLogin();};
   return (
@@ -1085,12 +1089,64 @@ export default function JefazoOS() {
   const [critAlert, setCritAlert] = useState<Renovacion | null>(null);
   const [alertDismissed, setAlertDismissed] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const fbReady = useRef(false);
+  const prevClonesRef = useRef<Clone[]>([]);
+  const prevRenovRef = useRef<Renovacion[]>([]);
+  const [fbSeed, setFbSeed] = useState(0);
 
-  // ── PERSIST ──────────────────────────────────────────────
-  useEffect(() => { LS.set("clones", clones); }, [clones]);
-  useEffect(() => { LS.set("renov", renovaciones); }, [renovaciones]);
-  useEffect(() => { LS.set("gs", gs); }, [gs]);
-  useEffect(() => { LS.set("adminSettings", adminSettings); }, [adminSettings]);
+  // ── FIREBASE INIT (carga datos de Firestore al entrar) ───
+  useEffect(() => {
+    if (scr === "login" || fbReady.current || !isFirebaseConfigured()) return;
+    const db = getDb();
+    Promise.all([
+      getDocs(collection(db, "clones")),
+      getDocs(collection(db, "renovaciones")),
+      getDoc(doc(db, "config", "globalState")),
+      getDoc(doc(db, "config", "adminSettings")),
+    ]).then(([clonesSnap, renovSnap, gsSnap, adminSnap]) => {
+      if (!clonesSnap.empty) { const d=clonesSnap.docs.map(x=>x.data() as Clone); prevClonesRef.current=d; setClones(d); }
+      if (!renovSnap.empty) { const d=renovSnap.docs.map(x=>x.data() as Renovacion); prevRenovRef.current=d; setRenovaciones(d); }
+      if (gsSnap.exists()) setGs(gsSnap.data() as GlobalState);
+      if (adminSnap.exists()) setAdminSettings(adminSnap.data() as AdminSettings);
+    }).catch(e => console.warn("Firebase load error:", e))
+      .finally(() => { fbReady.current = true; setFbSeed(s => s + 1); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scr]);
+
+  // ── PERSIST (localStorage + Firestore) ───────────────────
+  useEffect(() => {
+    LS.set("clones", clones);
+    if (!fbReady.current || !isFirebaseConfigured()) { prevClonesRef.current = clones; return; }
+    const db = getDb();
+    prevClonesRef.current.filter(c => !clones.find(x => x.id === c.id)).forEach(c => deleteDoc(doc(db, "clones", c.id)).catch(console.error));
+    clones.forEach(c => setDoc(doc(db, "clones", c.id), c).catch(console.error));
+    prevClonesRef.current = clones;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clones, fbSeed]);
+
+  useEffect(() => {
+    LS.set("renov", renovaciones);
+    if (!fbReady.current || !isFirebaseConfigured()) { prevRenovRef.current = renovaciones; return; }
+    const db = getDb();
+    prevRenovRef.current.filter(r => !renovaciones.find(x => x.id === r.id)).forEach(r => deleteDoc(doc(db, "renovaciones", r.id)).catch(console.error));
+    renovaciones.forEach(r => setDoc(doc(db, "renovaciones", r.id), r).catch(console.error));
+    prevRenovRef.current = renovaciones;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renovaciones, fbSeed]);
+
+  useEffect(() => {
+    LS.set("gs", gs);
+    if (!fbReady.current || !isFirebaseConfigured()) return;
+    setDoc(doc(getDb(), "config", "globalState"), gs).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gs, fbSeed]);
+
+  useEffect(() => {
+    LS.set("adminSettings", adminSettings);
+    if (!fbReady.current || !isFirebaseConfigured()) return;
+    setDoc(doc(getDb(), "config", "adminSettings"), adminSettings).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminSettings, fbSeed]);
 
   // ── REQUEST PUSH PERMISSION AFTER LOGIN ──────────────────
   useEffect(() => {
