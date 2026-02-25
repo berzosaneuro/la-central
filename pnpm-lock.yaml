@@ -11,6 +11,9 @@ importers:
       '@supabase/ssr':
         specifier: ^0.8.0
         version: 0.8.0(@supabase/supabase-js@2.97.0)
+      '@supabase/supabase-js':
+        specifier: ^2.43.0
+        version: 2.97.0
       firebase:
         specifier: ^12.9.0
         version: 12.9.0
