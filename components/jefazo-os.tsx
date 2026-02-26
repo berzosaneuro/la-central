@@ -236,20 +236,33 @@ const NeonBorder = ({children,on=true,r=16,glow=1,color,style:sx={}}: {children:
 };
 
 const Btn = ({children,onClick,primary=true,w="100%",h=48,neon=true,glow=1,fs=12,danger=false,success=false,icon=null,disabled=false,neonColor}: {children: React.ReactNode; onClick?: () => void; primary?: boolean; w?: string; h?: number; neon?: boolean; glow?: number; fs?: number; danger?: boolean; success?: boolean; icon?: React.ReactNode; disabled?: boolean; neonColor?: string}) => {
-  const [pr,setPr]=useState(false),[hov,setHov]=useState(false);
+  const [pr,setPr]=useState(false),[hov,setHov]=useState(false),[ripples,setRipples]=useState<Array<{id:number;x:number;y:number}>>([]);
+  const btnRef=useRef<HTMLButtonElement>(null);
   const bg=danger?"#802020":success?"#105530":primary?"#0A3058":"transparent";
   const bg2=danger?"#A03030":success?"#187740":primary?"#184878":"transparent";
   const bc=danger?"#CC4444":success?"#22CC66":primary?T.borderBright:T.border;
   const tc=danger?"#FF8888":success?"#66FFAA":T.neonBright;
   const handleClick=disabled?undefined:()=>{SFX.click();onClick?.()};
+  const handleMouseDown=(e: React.MouseEvent)=>{
+    if(!disabled&&btnRef.current){
+      const rect=btnRef.current.getBoundingClientRect();
+      const x=e.clientX-rect.left;
+      const y=e.clientY-rect.top;
+      const id=Date.now();
+      setRipples(p=>[...p,{id,x,y}]);
+      setTimeout(()=>setRipples(p=>p.filter(r=>r.id!==id)),600);
+    }
+    setPr(true);
+  };
   const inner=(
-    <button onClick={handleClick} onPointerDown={()=>!disabled&&setPr(true)} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
+    <button ref={btnRef} onClick={handleClick} onMouseDown={handleMouseDown} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
       style={{width:"100%",height:h,position:"relative",overflow:"hidden",border:`1.5px solid ${bc}${primary||danger||success?"88":""}`,borderRadius:12,opacity:disabled?0.4:1,
         background:primary||danger||success?`linear-gradient(180deg,${bg2} 0%,${bg} 40%,${T.dark} 100%)`:"linear-gradient(180deg,rgba(15,30,55,0.4) 0%,rgba(5,12,24,0.6) 100%)",
         color:tc,fontSize:fs,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.14em",cursor:disabled?"not-allowed":"pointer",
         transform:pr?"scale(0.96) translateY(2px)":hov?"scale(1.02) translateY(-2px)":"scale(1)",transition:"all 0.15s cubic-bezier(0.34,1.56,0.64,1)",
         boxShadow:(primary||danger||success)&&!disabled?pr?`0 1px 4px #000c, inset 0 1px 2px rgba(0,0,0,0.3)`:`0 4px 16px #000a, 0 0 ${hov?24:10}px ${bc}1a, inset 0 1px 0 rgba(255,255,255,0.05)`:`0 2px 8px #0006`,
         textShadow:`0 0 12px ${tc}66`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+      {ripples.map(r=><div key={r.id} style={{position:"absolute",left:r.x,top:r.y,width:8,height:8,borderRadius:"50%",background:`radial-gradient(circle,${bc}66,${bc}00)`,transform:"translate(-50%,-50%)",pointerEvents:"none",animation:`pulse3d 0.6s ease-out forwards`,boxShadow:`0 0 12px ${bc}44`}}/>)}
       {hov&&!disabled&&<div style={{position:"absolute",inset:0,background:`linear-gradient(90deg,transparent 30%,rgba(0,200,255,0.04) 50%,transparent 70%)`,backgroundSize:"200% 100%",animation:"shimmer 2.5s ease-in-out infinite"}}/>}
       {icon&&<span style={{fontSize:fs+4,lineHeight:1}}>{icon}</span>}{children}
     </button>
@@ -298,13 +311,16 @@ const ScoreBar = ({score}: {score: number}) => {
   </div>;
 };
 
-const Header = ({title,sub,back,icon="\u2B21"}: {title: string; sub?: string; back?: () => void; icon?: string}) => (
+const Header = ({title,sub,back,icon="\u2B21",version}: {title: string; sub?: string; back?: () => void; icon?: string; version?: string}) => (
   <div style={{padding:"16px 16px 0",paddingTop:"calc(env(safe-area-inset-top, 0px) + 16px)",animation:"fadeUp 0.3s ease-out"}}>
     {back&&<button onClick={back} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 2px",display:"flex",alignItems:"center",gap:6,color:T.neon,fontSize:13,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.08em",marginBottom:4}}>
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke={T.neon} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>VOLVER
     </button>}
     <div style={{display:"flex",alignItems:"center",gap:12}}>
-      <div style={{width:30,height:30,border:`1.5px solid ${T.neon}44`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 12px ${T.neon}22`,fontSize:14,color:T.neon}}>{icon}</div>
+      <div style={{position:"relative",width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{width:"100%",height:"100%",border:`1.5px solid ${T.neon}44`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 12px ${T.neon}22`,fontSize:18,color:T.neon}}>{icon}</div>
+        {version&&<div style={{position:"absolute",bottom:-2,right:-2,width:24,height:24,borderRadius:"50%",background:`linear-gradient(135deg,${T.neon}44,${T.electric}22)`,border:`1.5px solid ${T.neon}66`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:T.neonBright,fontFamily:"'Orbitron',sans-serif",boxShadow:`0 0 8px ${T.neon}33`,textShadow:`0 0 6px ${T.neon}66`}}>{version.split(".")[0]}</div>}
+      </div>
       <div>
         <h1 style={{fontSize:18,fontWeight:800,letterSpacing:"0.14em",margin:0,color:T.white,fontFamily:"'Orbitron',sans-serif",textShadow:`0 0 14px ${T.neon}33`,animation:"flickerTitle 8s infinite"}}>{title}</h1>
         {sub&&<p style={{fontSize:11,fontWeight:600,color:T.gray,marginTop:1,letterSpacing:"0.06em"}}>{sub}</p>}
@@ -341,8 +357,88 @@ const Modal = ({open,onClose,title,children}: {open: boolean; onClose: () => voi
 
 
 // ═══════════════════════════════════════════════════════════════
-// QUICK ACTIONS FAB
+// DRAGGABLE LIGHTNING BOLT (Rayo interactivo)
 // ═══════════════════════════════════════════════════════════════
+const DraggableLightning = () => {
+  const [pos, setPos] = useState({ x: Math.random() * 60 + 20, y: Math.random() * 40 + 10 });
+  const [dragging, setDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    setOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+    setDragging(true);
+    SFX.click();
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = document.querySelector('[style*="maxWidth: 480"]') as HTMLElement;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const x = ((e.clientX - rect.left - offset.x) / rect.width) * 100;
+        const y = ((e.clientY - rect.top - offset.y) / rect.height) * 100;
+        setPos({
+          x: Math.max(0, Math.min(90, x)),
+          y: Math.max(0, Math.min(90, y)),
+        });
+      }
+    };
+    const handleMouseUp = () => setDragging(false);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragging, offset]);
+
+  return (
+    <div
+      ref={ref}
+      onMouseDown={handleMouseDown}
+      style={{
+        position: "fixed",
+        left: `${pos.x}%`,
+        top: `${pos.y}%`,
+        cursor: dragging ? "grabbing" : "grab",
+        zIndex: 50,
+        userSelect: "none",
+        transition: dragging ? "none" : "all 0.3s ease-out",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 48,
+          animation: "pulse3d 2s ease-in-out infinite",
+          filter: "drop-shadow(0 0 20px #FFE040) drop-shadow(0 0 40px #FFA040)",
+          textShadow: `0 0 20px ${T.orange}, 0 0 40px ${T.yellow}`,
+        }}
+      >
+        ⚡
+      </div>
+      {dragging && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            border: `2px solid ${T.neon}`,
+            background: `radial-gradient(circle, ${T.neon}22, transparent)`,
+            animation: "borderGlow 1s ease-in-out infinite",
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 const QuickActions = ({onSync,onUpdate,onExport,onImport,onEmergency,emergency}: {onSync: () => void; onUpdate: () => void; onExport: () => void; onImport: () => void; onEmergency: () => void; emergency: boolean}) => {
   const [open,setOpen]=useState(false);
   const acts=[{i:"\uD83D\uDD04",l:"SINCRONIZAR TODO",fn:onSync},{i:"\u2B06\uFE0F",l:"ACTUALIZAR TODO",fn:onUpdate},{i:"\uD83E\uDDFE",l:"EXPORTAR",fn:onExport},{i:"\uD83D\uDCE5",l:"IMPORTAR",fn:onImport},{i:"\uD83D\uDEA8",l:emergency?"EMERG. DESACTIVAR":"EMERG. ACTIVAR",fn:onEmergency,d:true}];
@@ -416,33 +512,33 @@ const LoginScreen = ({go}: {go: () => void}) => {
       {/* LOGIN FORM */}
       <form onSubmit={handleSubmit} style={{width:"85%",maxWidth:360,display:"flex",flexDirection:"column",gap:"1.2vh",animation:"fadeUp 0.6s ease-out 0.2s both",flexShrink:0,zIndex:1}}>
         <div style={{textAlign:"center",marginBottom:"0.5vh"}}>
-          <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>IDENTIFICACI\u00D3N DEL SISTEMA</div>
+          <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>CREDENCIALES DE ACCESO</div>
         </div>
 
-        <LoginInput placeholder={"IDENTIFICACI\u00D3N DEL SISTEMA"} value={u} onChange={e=>setU(e.target.value)}/>
-        <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
+        <LoginInput placeholder={"USUARIO"} value={u} onChange={e=>setU(e.target.value)}/>
+        <LoginInput placeholder={"CONTRASEÑA"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
 
         {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
 
-        {/* ENTRAR BUTTON - Metallic */}
+        {/* ENTRAR BUTTON - NEON ENHANCED */}
         <div style={{marginTop:"0.5vh"}}>
           <div style={{borderRadius:10,padding:2,overflow:"hidden",
             background:loading
               ?`linear-gradient(90deg,${T.neonBright},${T.electric},${T.neonBright})`
-              :"linear-gradient(90deg, #405060, #8090A0, #C0CCD8, #8090A0, #405060)",
+              :`linear-gradient(90deg,${T.neon}44,${T.neonBright}88,${T.neon}44)`,
             backgroundSize:loading?"100% 100%":"300% 100%",
             animation:loading?"loadGlow 1s ease-in-out infinite":"neonSweep 4s linear infinite",
             boxShadow:loading
               ?`0 0 30px ${T.neon}88, 0 0 60px ${T.neon}44`
-              :"0 0 15px rgba(150,180,210,0.2), 0 0 30px rgba(100,140,180,0.1)"}}>
+              :`0 0 20px ${T.neon}66, 0 0 40px ${T.electric}33, inset 0 0 20px ${T.neon}11`}}>
             <button type="submit" style={{
               width:"100%",height:"6vh",minHeight:44,maxHeight:56,position:"relative",overflow:"hidden",
-              background:"linear-gradient(180deg, #B0BCC8 0%, #8898A8 20%, #607080 50%, #485868 80%, #384858 100%)",
-              border:"none",borderRadius:8,
-              color:"#E8F0F8",fontSize:"clamp(16px, 2.5vh, 22px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.2em",
+              background:`linear-gradient(180deg, ${T.neon}33 0%, ${T.electric}22 50%, ${T.neon}11 100%)`,
+              border:`2px solid ${T.neon}66`,borderRadius:8,
+              color:T.neonBright,fontSize:"clamp(16px, 2.5vh, 22px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.2em",
               cursor:loading?"default":"pointer",
-              textShadow:"0 1px 0 rgba(255,255,255,0.3), 0 -1px 0 rgba(0,0,0,0.5), 0 0 15px rgba(180,210,240,0.4)",
-              display:"flex",alignItems:"center",justifyContent:"center"}}>
+              textShadow:`0 0 20px ${T.neon}88, 0 0 40px ${T.electric}44`,
+              display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.3s"}}>
               {loading?<div style={{display:"flex",alignItems:"center",gap:10,width:"80%"}}><div style={{flex:1,height:4,background:"rgba(0,20,60,0.6)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,background:`linear-gradient(90deg,${T.neon},${T.neonBright},#fff)`,animation:"loadBar 1.5s ease-in-out forwards",boxShadow:`0 0 8px ${T.neon}`}}/></div></div>:"ENTRAR"}
             </button>
           </div>
@@ -484,7 +580,7 @@ const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clo
     if(filter==="update")return semver.gt(c.vd,c.vi);return true;
   });
   return <Screen>
-    <Header title="ECOSISTEMA" sub="Control maestro de clones" icon="\u2B21"/>
+    <Header title="ECOSISTEMA" sub="Control maestro de clones" icon="\u2B21" version={APP_VERSION}/>
     <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:12,position:"relative",zIndex:1}}>
       {/* HUD */}
       <div style={{animation:"stagger 0.35s ease-out 0.04s both"}}><Card neon glow={0.8}>
@@ -687,7 +783,7 @@ const Marketplace = ({back,toast,clones,addClone,removeClone}: {back: () => void
 const CentroMando = ({back,toast,clones,nav,updateClone,gs,setGs,onExport,onImport}: {back: () => void; toast: (msg: string) => void; clones: Clone[]; nav: (to: string, arg?: string | null) => void; updateClone: (id: string, data: Partial<Clone>) => void; gs: GlobalState; setGs: React.Dispatch<React.SetStateAction<GlobalState>>; onExport: () => void; onImport: () => void}) => {
   const logs=[{t:"INFO",msg:"Sistema iniciado",ts:new Date().toISOString()},{t:"OK",msg:"Clones sincronizados",ts:new Date(Date.now()-3600000).toISOString()},{t:"WARN",msg:"Actualizaciones disponibles",ts:new Date(Date.now()-7200000).toISOString()}];
   return <Screen>
-    <Header title="CENTRO DE MANDO" sub={`v${APP_VERSION}`} back={back} icon={"\uD83C\uDFAF"}/>
+    <Header title="CENTRO DE MANDO" sub={`v${APP_VERSION}`} back={back} icon={"\uD83C\uDFAF"} version={APP_VERSION}/>
     <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:12,zIndex:1}}>
       <Card neon><Label>Control General</Label>
         {([["Master Switch","master",T.neon],["Mantenimiento","maintenance",T.orange],["Emergencia","emergency",T.red]] as const).map(([l,k])=>
@@ -1186,6 +1282,7 @@ export default function JefazoOS() {
     <div style={{ width: "100vw", height: "100vh", maxWidth: 480, margin: "0 auto", background: T.bg, overflow: "hidden", position: "relative", borderLeft: `1px solid ${T.border}08`, borderRight: `1px solid ${T.border}08` }}>
       <GlobalCSS />
       <input type="file" ref={fileRef} accept=".json" style={{ display: "none" }} onChange={handleImport} />
+      <DraggableLightning />
       <div style={{ width: "100%", height: "100%", animation: dir === "in" ? "slideIn 0.24s cubic-bezier(0.25,0.46,0.45,0.94) both" : "slideOut 0.18s ease-in both" }}>
         {scr === "login" && <LoginScreen go={() => nav("eco")} />}
         {scr === "eco" && <Ecosystem clones={clones} renovaciones={renovaciones} nav={nav} toast={show} onSync={onSync} onUpdate={onUpdate} />}
