@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { AdminPanelComplete } from "./admin-panel-complete";
+import { MessagingPanel } from "./messaging-panel";
+import { ReportsPanel } from "./reports-panel";
+import { UpdatesPanel } from "./updates-panel";
 
 // ═══════════════════════════════════════════════════════════════
 // EL JEFAZO OS v5.1.0 — MASTER CONTROL PWA (Next.js Build)
@@ -262,7 +266,7 @@ const GlobalCSS = () => (
 
 // ═══════════════════════════════════════════════════════════════
 // REUSABLE COMPONENTS
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════��═══════════════════════════════════════════
 const NeonBorder = ({children,on=true,r=16,glow=1,color,style:sx={}}: {children: React.ReactNode; on?: boolean; r?: number; glow?: number; color?: string; style?: React.CSSProperties}) => {
   const c=color||T.neon, c2=color||T.electric;
   return (
@@ -772,7 +776,7 @@ const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate,onRemove}: {cl
       <div style={{display:"flex",gap:8}}>
         <Btn h={46} fs={10} glow={1} w="33%" icon={"\uD83D\uDC65"} onClick={()=>nav("customers")}>CLIENTES</Btn>
         <Btn h={46} fs={10} glow={1} w="33%" icon={"\u270D\uFE0F"} onClick={()=>nav("renov")}>RENOVACIÓN</Btn>
-        <Btn h={46} fs={10} glow={1} w="34%" icon={"\uD83D\uDD24"} onClick={()=>nav("admin")}>ADMIN</Btn>
+        <Btn h={46} fs={10} glow={1} w="34%" icon={"\uD83D\uDD24"} onClick={()=>nav("admin-complete")}>ADMIN+</Btn>
       </div>
       <div style={{display:"flex",gap:8}}>
         <Btn h={46} fs={10} glow={0.8} w="50%" icon="🌐" neonColor={T.neon} onClick={()=>nav("instances")}>INSTANCIAS</Btn>
@@ -1140,7 +1144,7 @@ const CustomersPanel = ({back,toast,clones}: {back: () => void; toast: (msg: str
 };
 
 // COMPARTIR / QR SCREEN
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════��════════
 const ShareQR = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
   const [url,setUrl]=useState(()=>LS.get("share_url",typeof window!=="undefined"?window.location.origin:"https://la-central-sigma.vercel.app") as string);
   useEffect(()=>{LS.set("share_url",url)},[url]);
@@ -1527,6 +1531,7 @@ export default function JefazoOS() {
         {scr === "msg" && <Comunicaciones back={() => nav("eco")} toast={show} />}
         {scr === "share" && <ShareQR back={() => nav("eco")} toast={show} />}
         {scr === "admin" && <AdminPanel back={() => nav("eco")} toast={show} clones={clones} gs={gs} activity={activity} adminSettings={adminSettings} setAdminSettings={setAdminSettings} />}
+        {scr === "admin-complete" && <AdminPanelComplete back={() => nav("eco")} toast={show} />}
         {scr === "insights" && <InsightsPanel back={() => nav("eco")} toast={show} clones={clones} />}
         {scr === "emergency" && <EmergencyScreen back={() => nav("eco")} toast={show} clones={clones} updateClone={updateClone} setGs={setGs} />}
         {scr === "customers" && <CustomersPanel back={() => nav("eco")} toast={show} clones={clones} />}
