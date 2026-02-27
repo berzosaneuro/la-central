@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { AdminPanelComplete } from "./admin-panel-complete";
 
 // ═══════════════════════════════════════════════════════════════
 // EL JEFAZO OS v5.1.0 — MASTER CONTROL PWA (Next.js Build)
@@ -44,7 +45,13 @@ interface Clone {
   id: string; name: string; desc: string; tipo: string; icon: string;
   vi: string; vd: string; estado: string; server: string; sync: string;
   upd: string; perm: string; ch: string; auto: boolean; logs: string[];
-  prev: string | null; ingresos?: number; score?: number;
+  prev: string | null; ingresos?: number; score?: number; customers?: string[];
+}
+
+interface Customer {
+  id: string; cloneId: string; nombre: string; email: string; telefono: string;
+  estado: "ACTIVO"|"INACTIVO"|"SUSPENDIDO"; createdAt: string; ultimaActividad: string;
+  ingresos?: number; notas?: string;
 }
 
 interface GlobalState {
@@ -119,41 +126,75 @@ const SFX = {
     this._tone(1108, 0.4, "triangle", 0.08, 0.45);
   },
   notify() {
-    // Soft double ping
-    this._tone(880, 0.12, "sine", 0.1, 0);
-    this._tone(1100, 0.15, "sine", 0.08, 0.12);
+    // Elegant iOS notification (bell-like, sophisticated)
+    const ctx = this._getCtx();
+    const t = ctx.currentTime;
+    const playNote = (freq: number, startTime: number, duration: number = 0.1) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.08, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+    playNote(880, t, 0.08);
+    playNote(1046, t + 0.1, 0.12);
   },
   error() {
-    // Low buzz
-    this._tone(180, 0.2, "sawtooth", 0.08, 0);
-    this._tone(140, 0.25, "sawtooth", 0.06, 0.15);
+    // Elegant iOS error sound (soft and musical)
+    const ctx = this._getCtx();
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(380, t);
+    osc.frequency.setValueAtTime(320, t + 0.05);
+    osc.frequency.setValueAtTime(280, t + 0.1);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0, t + 0.12);
+    osc.start(t);
+    osc.stop(t + 0.12);
   },
   click() {
-    // Quick tick
-    this._tone(600, 0.05, "square", 0.04, 0);
-  },
-  alert() {
-    // Urgent siren-like
-    this._tone(660, 0.18, "square", 0.1, 0);
-    this._tone(880, 0.18, "square", 0.1, 0.2);
-    this._tone(660, 0.18, "square", 0.1, 0.4);
-    this._tone(880, 0.25, "square", 0.12, 0.6);
+    // iPhone-style elegant click (minimal, refined)
+    const ctx = this._getCtx();
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(550, t);
+    osc.frequency.exponentialRampToValueAtTime(510, t + 0.03);
+    gain.gain.setValueAtTime(0.06, t);
+    gain.gain.exponentialRampToValueAtTime(0, t + 0.03);
+    osc.start(t);
+    osc.stop(t + 0.03);
   },
   success() {
-    // Positive chime
-    this._tone(523, 0.12, "sine", 0.1, 0);
-    this._tone(659, 0.12, "sine", 0.1, 0.1);
-    this._tone(784, 0.2, "sine", 0.12, 0.2);
-  }
-};
-
-// ── PUSH NOTIFICATIONS ────────────────────────────────────
-const PushNotif = {
-  supported: typeof window !== "undefined" && "Notification" in window,
-  async requestPermission(): Promise<boolean> {
-    if (!this.supported) return false;
-    const perm = await Notification.requestPermission();
-    return perm === "granted";
+    // Elegant iOS success sound (2-note ascending with bell-like quality)
+    const ctx = this._getCtx();
+    const t = ctx.currentTime;
+    const playNote = (freq: number, startTime: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.1, startTime);
+      gain.gain.exponentialRampToValueAtTime(0, startTime + 0.15);
+      osc.start(startTime);
+      osc.stop(startTime + 0.15);
+    };
+    playNote(640, t); // Higher note
+    playNote(960, t + 0.08); // Even higher note
   },
   send(title: string, body: string, icon = "/icon-192.png") {
     if (!this.supported || Notification.permission !== "granted") return;
@@ -222,7 +263,7 @@ const GlobalCSS = () => (
 
 // ═══════════════════════════════════════════════════════════════
 // REUSABLE COMPONENTS
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════��═══════════════════════════════════════════
 const NeonBorder = ({children,on=true,r=16,glow=1,color,style:sx={}}: {children: React.ReactNode; on?: boolean; r?: number; glow?: number; color?: string; style?: React.CSSProperties}) => {
   const c=color||T.neon, c2=color||T.electric;
   return (
@@ -236,20 +277,33 @@ const NeonBorder = ({children,on=true,r=16,glow=1,color,style:sx={}}: {children:
 };
 
 const Btn = ({children,onClick,primary=true,w="100%",h=48,neon=true,glow=1,fs=12,danger=false,success=false,icon=null,disabled=false,neonColor}: {children: React.ReactNode; onClick?: () => void; primary?: boolean; w?: string; h?: number; neon?: boolean; glow?: number; fs?: number; danger?: boolean; success?: boolean; icon?: React.ReactNode; disabled?: boolean; neonColor?: string}) => {
-  const [pr,setPr]=useState(false),[hov,setHov]=useState(false);
+  const [pr,setPr]=useState(false),[hov,setHov]=useState(false),[ripples,setRipples]=useState<Array<{id:number;x:number;y:number}>>([]);
+  const btnRef=useRef<HTMLButtonElement>(null);
   const bg=danger?"#802020":success?"#105530":primary?"#0A3058":"transparent";
   const bg2=danger?"#A03030":success?"#187740":primary?"#184878":"transparent";
   const bc=danger?"#CC4444":success?"#22CC66":primary?T.borderBright:T.border;
   const tc=danger?"#FF8888":success?"#66FFAA":T.neonBright;
   const handleClick=disabled?undefined:()=>{SFX.click();onClick?.()};
+  const handleMouseDown=(e: React.MouseEvent)=>{
+    if(!disabled&&btnRef.current){
+      const rect=btnRef.current.getBoundingClientRect();
+      const x=e.clientX-rect.left;
+      const y=e.clientY-rect.top;
+      const id=Date.now();
+      setRipples(p=>[...p,{id,x,y}]);
+      setTimeout(()=>setRipples(p=>p.filter(r=>r.id!==id)),600);
+    }
+    setPr(true);
+  };
   const inner=(
-    <button onClick={handleClick} onPointerDown={()=>!disabled&&setPr(true)} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
+    <button ref={btnRef} onClick={handleClick} onMouseDown={handleMouseDown} onPointerUp={()=>setPr(false)} onPointerLeave={()=>{setPr(false);setHov(false)}} onPointerEnter={()=>!disabled&&setHov(true)}
       style={{width:"100%",height:h,position:"relative",overflow:"hidden",border:`1.5px solid ${bc}${primary||danger||success?"88":""}`,borderRadius:12,opacity:disabled?0.4:1,
         background:primary||danger||success?`linear-gradient(180deg,${bg2} 0%,${bg} 40%,${T.dark} 100%)`:"linear-gradient(180deg,rgba(15,30,55,0.4) 0%,rgba(5,12,24,0.6) 100%)",
         color:tc,fontSize:fs,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.14em",cursor:disabled?"not-allowed":"pointer",
         transform:pr?"scale(0.96) translateY(2px)":hov?"scale(1.02) translateY(-2px)":"scale(1)",transition:"all 0.15s cubic-bezier(0.34,1.56,0.64,1)",
         boxShadow:(primary||danger||success)&&!disabled?pr?`0 1px 4px #000c, inset 0 1px 2px rgba(0,0,0,0.3)`:`0 4px 16px #000a, 0 0 ${hov?24:10}px ${bc}1a, inset 0 1px 0 rgba(255,255,255,0.05)`:`0 2px 8px #0006`,
         textShadow:`0 0 12px ${tc}66`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+      {ripples.map(r=><div key={r.id} style={{position:"absolute",left:r.x,top:r.y,width:8,height:8,borderRadius:"50%",background:`radial-gradient(circle,${bc}66,${bc}00)`,transform:"translate(-50%,-50%)",pointerEvents:"none",animation:`pulse3d 0.6s ease-out forwards`,boxShadow:`0 0 12px ${bc}44`}}/>)}
       {hov&&!disabled&&<div style={{position:"absolute",inset:0,background:`linear-gradient(90deg,transparent 30%,rgba(0,200,255,0.04) 50%,transparent 70%)`,backgroundSize:"200% 100%",animation:"shimmer 2.5s ease-in-out infinite"}}/>}
       {icon&&<span style={{fontSize:fs+4,lineHeight:1}}>{icon}</span>}{children}
     </button>
@@ -298,13 +352,16 @@ const ScoreBar = ({score}: {score: number}) => {
   </div>;
 };
 
-const Header = ({title,sub,back,icon="\u2B21"}: {title: string; sub?: string; back?: () => void; icon?: string}) => (
+const Header = ({title,sub,back,icon="\u2B21",version}: {title: string; sub?: string; back?: () => void; icon?: string; version?: string}) => (
   <div style={{padding:"16px 16px 0",paddingTop:"calc(env(safe-area-inset-top, 0px) + 16px)",animation:"fadeUp 0.3s ease-out"}}>
     {back&&<button onClick={back} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 2px",display:"flex",alignItems:"center",gap:6,color:T.neon,fontSize:13,fontWeight:700,fontFamily:"'Rajdhani',sans-serif",letterSpacing:"0.08em",marginBottom:4}}>
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke={T.neon} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>VOLVER
     </button>}
     <div style={{display:"flex",alignItems:"center",gap:12}}>
-      <div style={{width:30,height:30,border:`1.5px solid ${T.neon}44`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 12px ${T.neon}22`,fontSize:14,color:T.neon}}>{icon}</div>
+      <div style={{position:"relative",width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{width:"100%",height:"100%",border:`1.5px solid ${T.neon}44`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 12px ${T.neon}22`,fontSize:18,color:T.neon}}>{icon}</div>
+        {version&&<div style={{position:"absolute",bottom:-2,right:-2,width:24,height:24,borderRadius:"50%",background:`linear-gradient(135deg,${T.neon}44,${T.electric}22)`,border:`1.5px solid ${T.neon}66`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:T.neonBright,fontFamily:"'Orbitron',sans-serif",boxShadow:`0 0 8px ${T.neon}33`,textShadow:`0 0 6px ${T.neon}66`}}>{version.split(".")[0]}</div>}
+      </div>
       <div>
         <h1 style={{fontSize:18,fontWeight:800,letterSpacing:"0.14em",margin:0,color:T.white,fontFamily:"'Orbitron',sans-serif",textShadow:`0 0 14px ${T.neon}33`,animation:"flickerTitle 8s infinite"}}>{title}</h1>
         {sub&&<p style={{fontSize:11,fontWeight:600,color:T.gray,marginTop:1,letterSpacing:"0.06em"}}>{sub}</p>}
@@ -341,8 +398,88 @@ const Modal = ({open,onClose,title,children}: {open: boolean; onClose: () => voi
 
 
 // ═══════════════════════════════════════════════════════════════
-// QUICK ACTIONS FAB
+// DRAGGABLE LIGHTNING BOLT (Rayo interactivo)
 // ═══════════════════════════════════════════════════════════════
+const DraggableLightning = () => {
+  const [pos, setPos] = useState({ x: Math.random() * 60 + 20, y: Math.random() * 40 + 10 });
+  const [dragging, setDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    setOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+    setDragging(true);
+    SFX.click();
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = document.querySelector('[style*="maxWidth: 480"]') as HTMLElement;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const x = ((e.clientX - rect.left - offset.x) / rect.width) * 100;
+        const y = ((e.clientY - rect.top - offset.y) / rect.height) * 100;
+        setPos({
+          x: Math.max(0, Math.min(90, x)),
+          y: Math.max(0, Math.min(90, y)),
+        });
+      }
+    };
+    const handleMouseUp = () => setDragging(false);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragging, offset]);
+
+  return (
+    <div
+      ref={ref}
+      onMouseDown={handleMouseDown}
+      style={{
+        position: "fixed",
+        left: `${pos.x}%`,
+        top: `${pos.y}%`,
+        cursor: dragging ? "grabbing" : "grab",
+        zIndex: 50,
+        userSelect: "none",
+        transition: dragging ? "none" : "all 0.3s ease-out",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 48,
+          animation: "pulse3d 2s ease-in-out infinite",
+          filter: "drop-shadow(0 0 20px #FFE040) drop-shadow(0 0 40px #FFA040)",
+          textShadow: `0 0 20px ${T.orange}, 0 0 40px ${T.yellow}`,
+        }}
+      >
+        ⚡
+      </div>
+      {dragging && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            border: `2px solid ${T.neon}`,
+            background: `radial-gradient(circle, ${T.neon}22, transparent)`,
+            animation: "borderGlow 1s ease-in-out infinite",
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 const QuickActions = ({onSync,onUpdate,onExport,onImport,onEmergency,emergency}: {onSync: () => void; onUpdate: () => void; onExport: () => void; onImport: () => void; onEmergency: () => void; emergency: boolean}) => {
   const [open,setOpen]=useState(false);
   const acts=[{i:"\uD83D\uDD04",l:"SINCRONIZAR TODO",fn:onSync},{i:"\u2B06\uFE0F",l:"ACTUALIZAR TODO",fn:onUpdate},{i:"\uD83E\uDDFE",l:"EXPORTAR",fn:onExport},{i:"\uD83D\uDCE5",l:"IMPORTAR",fn:onImport},{i:"\uD83D\uDEA8",l:emergency?"EMERG. DESACTIVAR":"EMERG. ACTIVAR",fn:onEmergency,d:true}];
@@ -416,33 +553,33 @@ const LoginScreen = ({go}: {go: () => void}) => {
       {/* LOGIN FORM */}
       <form onSubmit={handleSubmit} style={{width:"85%",maxWidth:360,display:"flex",flexDirection:"column",gap:"1.2vh",animation:"fadeUp 0.6s ease-out 0.2s both",flexShrink:0,zIndex:1}}>
         <div style={{textAlign:"center",marginBottom:"0.5vh"}}>
-          <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>IDENTIFICACI\u00D3N DEL SISTEMA</div>
+          <div style={{fontSize:"clamp(11px, 1.8vh, 14px)",fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.25em",color:"#4090BB",textShadow:"0 0 10px rgba(0,150,255,0.3)"}}>CREDENCIALES DE ACCESO</div>
         </div>
 
-        <LoginInput placeholder={"IDENTIFICACI\u00D3N DEL SISTEMA"} value={u} onChange={e=>setU(e.target.value)}/>
-        <LoginInput placeholder={"CONTRASE\u00D1A"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
+        <LoginInput placeholder={"USUARIO"} value={u} onChange={e=>setU(e.target.value)}/>
+        <LoginInput placeholder={"CONTRASEÑA"} type="password" value={pw} onChange={e=>setPw(e.target.value)}/>
 
         {error&&<div style={{color:T.red,fontSize:12,fontWeight:700,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.08em",textAlign:"center",textShadow:`0 0 10px ${T.red}88`,animation:"fadeUp 0.3s ease-out"}}>{error}</div>}
 
-        {/* ENTRAR BUTTON - Metallic */}
+        {/* ENTRAR BUTTON - NEON ENHANCED */}
         <div style={{marginTop:"0.5vh"}}>
           <div style={{borderRadius:10,padding:2,overflow:"hidden",
             background:loading
               ?`linear-gradient(90deg,${T.neonBright},${T.electric},${T.neonBright})`
-              :"linear-gradient(90deg, #405060, #8090A0, #C0CCD8, #8090A0, #405060)",
+              :`linear-gradient(90deg,${T.neon}44,${T.neonBright}88,${T.neon}44)`,
             backgroundSize:loading?"100% 100%":"300% 100%",
             animation:loading?"loadGlow 1s ease-in-out infinite":"neonSweep 4s linear infinite",
             boxShadow:loading
               ?`0 0 30px ${T.neon}88, 0 0 60px ${T.neon}44`
-              :"0 0 15px rgba(150,180,210,0.2), 0 0 30px rgba(100,140,180,0.1)"}}>
+              :`0 0 20px ${T.neon}66, 0 0 40px ${T.electric}33, inset 0 0 20px ${T.neon}11`}}>
             <button type="submit" style={{
               width:"100%",height:"6vh",minHeight:44,maxHeight:56,position:"relative",overflow:"hidden",
-              background:"linear-gradient(180deg, #B0BCC8 0%, #8898A8 20%, #607080 50%, #485868 80%, #384858 100%)",
-              border:"none",borderRadius:8,
-              color:"#E8F0F8",fontSize:"clamp(16px, 2.5vh, 22px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.2em",
+              background:`linear-gradient(180deg, ${T.neon}33 0%, ${T.electric}22 50%, ${T.neon}11 100%)`,
+              border:`2px solid ${T.neon}66`,borderRadius:8,
+              color:T.neonBright,fontSize:"clamp(16px, 2.5vh, 22px)",fontWeight:900,fontFamily:"'Orbitron',sans-serif",letterSpacing:"0.2em",
               cursor:loading?"default":"pointer",
-              textShadow:"0 1px 0 rgba(255,255,255,0.3), 0 -1px 0 rgba(0,0,0,0.5), 0 0 15px rgba(180,210,240,0.4)",
-              display:"flex",alignItems:"center",justifyContent:"center"}}>
+              textShadow:`0 0 20px ${T.neon}88, 0 0 40px ${T.electric}44`,
+              display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.3s"}}>
               {loading?<div style={{display:"flex",alignItems:"center",gap:10,width:"80%"}}><div style={{flex:1,height:4,background:"rgba(0,20,60,0.6)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,background:`linear-gradient(90deg,${T.neon},${T.neonBright},#fff)`,animation:"loadBar 1.5s ease-in-out forwards",boxShadow:`0 0 8px ${T.neon}`}}/></div></div>:"ENTRAR"}
             </button>
           </div>
@@ -468,9 +605,86 @@ const LoginScreen = ({go}: {go: () => void}) => {
 
 
 // ═══════════════════════════════════════════════════════════════
-// ECOSYSTEM SCREEN (DASHBOARD)
+// CONNECTED INSTANCES (Instancias Conectadas)
 // ═══════════════════════════════════════════════════════════════
-const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clone[]; renovaciones: Renovacion[]; nav: (to: string, arg?: string | null) => void; toast: (msg: string) => void; onSync: (id: string) => void; onUpdate: (id: string) => void}) => {
+const ConnectedInstances = ({back,toast,nav}: {back: () => void; toast: (msg: string) => void; nav: (to: string, arg?: string | null) => void}) => {
+  const [instances,setInstances]=useState<Array<{id:string;nombre:string;pais:string;clones:number;estado:"ONLINE"|"OFFLINE";ultimaSync:string;ingresos:number}>>(LS.get("instances",[
+    {id:"master",nombre:"MATRIZ MADRID",pais:"España",clones:3,estado:"ONLINE",ultimaSync:new Date().toISOString(),ingresos:5200},
+    {id:"inst1",nombre:"FILIAL LIMA",pais:"Perú",clones:2,estado:"ONLINE",ultimaSync:new Date(Date.now()-1800000).toISOString(),ingresos:2100},
+    {id:"inst2",nombre:"OFICINA BUENOS AIRES",pais:"Argentina",clones:1,estado:"OFFLINE",ultimaSync:new Date(Date.now()-86400000).toISOString(),ingresos:0},
+  ]));
+  const [newInst,setNewInst]=useState({nombre:"",pais:""});
+
+  const addInstance=()=>{
+    if(!newInst.nombre||!newInst.pais){toast("Completa todos los datos");return;}
+    const inst={id:uid(),nombre:newInst.nombre.toUpperCase(),pais:newInst.pais,clones:0,estado:"ONLINE" as const,ultimaSync:new Date().toISOString(),ingresos:0};
+    const updated=[...instances,inst];
+    setInstances(updated);
+    LS.set("instances",updated);
+    setNewInst({nombre:"",pais:""});
+    SFX.success();
+    toast("Instancia añadida");
+  };
+
+  const deleteInstance=(id:string)=>{
+    if(id==="master"){toast("No se puede eliminar la matriz");return;}
+    const updated=instances.filter(i=>i.id!==id);
+    setInstances(updated);
+    LS.set("instances",updated);
+    SFX.success();
+    toast("Instancia eliminada");
+  };
+
+  const totalClones=instances.reduce((s,i)=>s+i.clones,0);
+  const totalIngresos=instances.reduce((s,i)=>s+i.ingresos,0);
+  const onlineCount=instances.filter(i=>i.estado==="ONLINE").length;
+
+  return <Screen>
+    <Header title="INSTANCIAS CONECTADAS" sub={`${instances.length} oficinas globales`} back={back} icon="🌐" version={APP_VERSION}/>
+    <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:10,zIndex:1}}>
+      {/* STATS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <Card neon><HudStat label="Total Clones" value={totalClones} color={T.neon}/></Card>
+        <Card neon><HudStat label="Ingresos Globales" value={`€${totalIngresos}`} color={T.green}/></Card>
+      </div>
+
+      {/* INSTANCES LIST */}
+      {instances.map(inst=>(
+        <Card key={inst.id} neon={inst.estado==="ONLINE"}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"start"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:800,color:T.white,letterSpacing:"0.1em",fontFamily:"'Orbitron',sans-serif",marginBottom:4}}>{inst.nombre}</div>
+              <div style={{fontSize:11,color:T.gray,marginBottom:6}}>📍 {inst.pais} • {inst.clones} clones • €{inst.ingresos}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6,fontSize:10}}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:inst.estado==="ONLINE"?T.green:T.red,boxShadow:`0 0 8px ${inst.estado==="ONLINE"?T.green:T.red}66`}}/>
+                <span style={{color:inst.estado==="ONLINE"?T.green:T.red,fontWeight:700}}>{inst.estado}</span>
+                <span style={{color:T.gray,marginLeft:"auto"}}>↻ {fmtDT(inst.ultimaSync)}</span>
+              </div>
+            </div>
+            {inst.id!=="master"&&<button onClick={()=>deleteInstance(inst.id)} style={{padding:4,background:"none",border:"none",cursor:"pointer",fontSize:14,color:T.red}}>✕</button>}
+          </div>
+        </Card>
+      ))}
+
+      {/* ADD INSTANCE */}
+      <Card neon>
+        <Label>Añadir Instancia</Label>
+        <input placeholder="Nombre (ej: FILIAL MEXICO)" value={newInst.nombre} onChange={e=>setNewInst({...newInst,nombre:e.target.value})} 
+          style={{width:"100%",padding:10,borderRadius:6,background:T.dark,border:`1px solid ${T.border}44`,color:T.white,fontSize:12,marginBottom:8,fontFamily:"'Rajdhani',sans-serif"}}/>
+        <input placeholder="País" value={newInst.pais} onChange={e=>setNewInst({...newInst,pais:e.target.value})} 
+          style={{width:"100%",padding:10,borderRadius:6,background:T.dark,border:`1px solid ${T.border}44`,color:T.white,fontSize:12,marginBottom:8,fontFamily:"'Rajdhani',sans-serif"}}/>
+        <Btn h={40} fs={11} onClick={addInstance}>CONECTAR INSTANCIA</Btn>
+      </Card>
+
+      <div style={{height:20}}/>
+    </div>
+  </Screen>;
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ECOSYSTEM (Main Grid)
+// ═══════════════════════════════════════════════════════════════
+const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate,onRemove}: {clones: Clone[]; renovaciones: Renovacion[]; nav: (to: string, arg?: string | null) => void; toast: (msg: string) => void; onSync: (id: string) => void; onUpdate: (id: string) => void; onRemove?: (id: string) => void}) => {
   const [search,setSearch]=useState("");const [filter,setFilter]=useState("all");
   const activos=clones.filter(c=>c.estado==="ACTIVO").length;
   const updates=clones.filter(c=>semver.gt(c.vd,c.vi)).length;
@@ -484,7 +698,7 @@ const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clo
     if(filter==="update")return semver.gt(c.vd,c.vi);return true;
   });
   return <Screen>
-    <Header title="ECOSISTEMA" sub="Control maestro de clones" icon="\u2B21"/>
+    <Header title="ECOSISTEMA" sub="Control maestro de clones" icon="\u2B21" version={APP_VERSION}/>
     <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:12,position:"relative",zIndex:1}}>
       {/* HUD */}
       <div style={{animation:"stagger 0.35s ease-out 0.04s both"}}><Card neon glow={0.8}>
@@ -533,6 +747,13 @@ const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clo
             <Btn h={34} fs={9} glow={0.3} w="25%" neonColor={T.green} onClick={()=>{window.open(`https://wa.me/?text=${encodeURIComponent(`Info sobre ${c.name}`)}`,"_blank");toast("WhatsApp...")}}>WA</Btn>
             {hu&&<Btn h={34} fs={9} glow={0.5} w="25%" neonColor={T.orange} onClick={()=>onUpdate(c.id)}>UPD</Btn>}
           </div>
+          <Btn h={32} fs={8} danger w="100%" style={{marginTop:6}} onClick={()=>{
+            if(confirm(`¿Borrar ${c.name} permanentemente?`)){
+              onRemove?.(c.id);
+              toast(`${c.name} eliminado`);
+              SFX.success();
+            }
+          }}>BORRAR CLON</Btn>
         </Card></div>
       )})}
       {/* CONTROL BUTTONS - Large, 3D, visible */}
@@ -550,16 +771,17 @@ const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clo
         <Btn h={46} fs={10} glow={1} w="50%" icon={"\uD83D\uDCE6"} onClick={()=>nav("market")}>MARKETPLACE</Btn>
       </div>
       <div style={{display:"flex",gap:8}}>
-        <Btn h={42} fs={10} w="50%" icon={"\uD83D\uDCAC"} onClick={()=>nav("msg")}>{"MENSAJER\u00CDA"}</Btn>
-        <Btn h={42} fs={10} w="50%" icon={"\uD83D\uDCC5"} onClick={()=>nav("renov")}>RENOVACIONES</Btn>
+        <Btn h={46} fs={10} glow={1} w="33%" icon={"\uD83D\uDC65"} onClick={()=>nav("customers")}>CLIENTES</Btn>
+        <Btn h={46} fs={10} glow={1} w="33%" icon={"\u270D\uFE0F"} onClick={()=>nav("renov")}>RENOVACIÓN</Btn>
+        <Btn h={46} fs={10} glow={1} w="34%" icon={"\uD83D\uDD24"} onClick={()=>nav("admin-complete")}>ADMIN+</Btn>
       </div>
       <div style={{display:"flex",gap:8}}>
-        <Btn h={42} fs={10} w="50%" icon={"\uD83C\uDFAF"} onClick={()=>nav("cmd")}>CENTRO DE MANDO</Btn>
-        <Btn h={42} fs={10} w="50%" icon={"\uD83D\uDCCA"} onClick={()=>nav("admin")}>{"ADMINISTRACI\u00D3N"}</Btn>
+        <Btn h={46} fs={10} glow={0.8} w="50%" icon="🌐" neonColor={T.neon} onClick={()=>nav("instances")}>INSTANCIAS</Btn>
+        <Btn h={46} fs={10} glow={0.8} w="50%" primary={false} icon={"\uD83D\uDCCA"} onClick={()=>nav("insights")}>INSIGHTS</Btn>
       </div>
       <div style={{display:"flex",gap:8}}>
-        <Btn h={42} fs={10} w="50%" icon={"\uD83D\uDCF1"} onClick={()=>nav("share")}>COMPARTIR / QR</Btn>
-        <Btn h={42} fs={10} w="50%" icon={"\uD83E\uDDE0"} onClick={()=>nav("insights")}>INSIGHTS IA</Btn>
+        <Btn h={42} fs={10} w="50%" icon={"\uD83C\uDFAF"} onClick={()=>nav("cmd")}>CENTRO MANDO</Btn>
+        <Btn h={42} fs={10} w="50%" icon={"\uD83D\uDCF1"} onClick={()=>nav("share")}>COMPARTIR</Btn>
       </div>
       <div style={{height:70}}/>
     </div>
@@ -570,7 +792,7 @@ const Ecosystem = ({clones,renovaciones,nav,toast,onSync,onUpdate}: {clones: Clo
 // ═══════════════════════════════════════════════════════════════
 // CLONE CONTROL SCREEN
 // ═══════════════════════════════════════════════════════════════
-const CloneCtrl = ({clone,back,toast,updateClone,onSync,onUpdate}: {clone: Clone | undefined; back: () => void; toast: (msg: string) => void; updateClone: (id: string, data: Partial<Clone>) => void; onSync: (id: string) => void; onUpdate: (id: string) => void}) => {
+const CloneCtrl = ({clone,back,toast,updateClone,onSync,onUpdate,onDelete}: {clone: Clone | undefined; back: () => void; toast: (msg: string) => void; updateClone: (id: string, data: Partial<Clone>) => void; onSync: (id: string) => void; onUpdate: (id: string) => void; onDelete?: (id: string) => void}) => {
   if(!clone)return <Screen><Header title="ERROR" back={back}/><div style={{padding:20,color:T.red}}>Clon no encontrado</div></Screen>;
   const [mods,setMods]=useState<Record<string, boolean>>({"Entrenamiento":true,"Nutricion":true,"Chat":false,"Pagos":true,"Notificaciones":true,"Analytics":false});
   const hu=semver.gt(clone.vd,clone.vi);
@@ -620,6 +842,7 @@ const CloneCtrl = ({clone,back,toast,updateClone,onSync,onUpdate}: {clone: Clone
         <Btn h={38} fs={10} w="50%" icon={"\uD83D\uDCAC"} onClick={()=>{window.open(`https://wa.me/?text=${encodeURIComponent(`Mensaje sobre ${clone.name}`)}`,"_blank");toast("WhatsApp...")}}>WHATSAPP</Btn>
         <Btn h={38} fs={10} w="50%" neonColor={T.orange} icon={"\uD83D\uDD14"} onClick={()=>toast(`Alerta enviada a ${clone.name}`)}>ENVIAR ALERTA</Btn>
       </div>
+      {onDelete && <Btn h={38} fs={10} danger icon={"\uD83D\uDDD1"} onClick={()=>{if(confirm(`¿Eliminar "${clone.name}"?`)){onDelete(clone.id);back();toast(`${clone.name} eliminado`)}}}>ELIMINAR CLON</Btn>}
       {clone.prev&&<Btn h={38} fs={10} primary={false} icon={"\u21A9\uFE0F"} onClick={()=>{updateClone(clone.id,{vi:clone.prev!,logs:[...clone.logs,`Rollback\u2192${clone.prev}`]});toast(`Rollback a ${clone.prev}`)}}>{"ROLLBACK \u2192 "}{clone.prev}</Btn>}
       <Card><Label>Logs</Label><div style={{maxHeight:120,overflowY:"auto"}}>{clone.logs.slice(-10).reverse().map((l,i)=><div key={i} style={{fontSize:10,color:T.gray,padding:"3px 0",borderBottom:`1px solid ${T.border}0a`}}>{"\u203A "}{l}</div>)}</div></Card>
       <div style={{height:70}}/>
@@ -687,7 +910,7 @@ const Marketplace = ({back,toast,clones,addClone,removeClone}: {back: () => void
 const CentroMando = ({back,toast,clones,nav,updateClone,gs,setGs,onExport,onImport}: {back: () => void; toast: (msg: string) => void; clones: Clone[]; nav: (to: string, arg?: string | null) => void; updateClone: (id: string, data: Partial<Clone>) => void; gs: GlobalState; setGs: React.Dispatch<React.SetStateAction<GlobalState>>; onExport: () => void; onImport: () => void}) => {
   const logs=[{t:"INFO",msg:"Sistema iniciado",ts:new Date().toISOString()},{t:"OK",msg:"Clones sincronizados",ts:new Date(Date.now()-3600000).toISOString()},{t:"WARN",msg:"Actualizaciones disponibles",ts:new Date(Date.now()-7200000).toISOString()}];
   return <Screen>
-    <Header title="CENTRO DE MANDO" sub={`v${APP_VERSION}`} back={back} icon={"\uD83C\uDFAF"}/>
+    <Header title="CENTRO DE MANDO" sub={`v${APP_VERSION}`} back={back} icon={"\uD83C\uDFAF"} version={APP_VERSION}/>
     <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:12,zIndex:1}}>
       <Card neon><Label>Control General</Label>
         {([["Master Switch","master",T.neon],["Mantenimiento","maintenance",T.orange],["Emergencia","emergency",T.red]] as const).map(([l,k])=>
@@ -785,33 +1008,140 @@ const Renovaciones = ({back,toast,renovaciones:rn,setRenovaciones:setRn}: {back:
 
 
 // ═══════════════════════════════════════════════════════════════
-// COMUNICACIONES SCREEN
-// ════════════════════════════════════════════════��══════════════
-const Comunicaciones = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
-  const [phone,setPhone]=useState(()=>LS.get("comms_ph","") as string);const [email,setEmail]=useState(()=>LS.get("comms_em","") as string);
-  const [subject,setSubject]=useState("EL JEFAZO \u2014 Info");const [msg,setMsg]=useState("");
-  useEffect(()=>{LS.set("comms_ph",phone)},[phone]);useEffect(()=>{LS.set("comms_em",email)},[email]);
-  const sendWA=()=>{if(!phone||!msg){toast("Telefono y mensaje necesarios");return;}window.open(`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`,"_blank");toast("Abriendo WhatsApp...")};
-  const sendEM=()=>{if(!email||!msg){toast("Email y mensaje necesarios");return;}window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`,"_blank");toast("Abriendo email...")};
-  const tpl=[{l:"Acceso listo",t:"Tu acceso a EL JEFAZO ha sido activado."},{l:"Actualizacion",t:"Nueva actualizacion disponible en EL JEFAZO OS."},{l:"Pago recibido",t:"Tu pago ha sido recibido. Suscripcion activa."}];
-  return <Screen>
-    <Header title="COMUNICACIONES" sub="WhatsApp y Email" back={back} icon={"\uD83D\uDCAC"}/>
-    <div style={{flex:1,overflowY:"auto",padding:"10px 16px",display:"flex",flexDirection:"column",gap:12,zIndex:1}}>
-      <Card><Label>Plantillas</Label><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{tpl.map(t=><button key={t.l} onClick={()=>setMsg(t.t)} style={{background:`${T.neon}12`,border:`1px solid ${T.neon}33`,borderRadius:8,color:T.neonBright,fontSize:10,fontWeight:700,padding:"5px 10px",cursor:"pointer"}}>{t.l}</button>)}</div></Card>
-      <Card neon glow={0.5}><Label>Mensaje</Label>
-        <textarea value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Escribe tu mensaje..." style={{width:"100%",height:90,background:"#060E1C",border:`1px solid ${T.border}44`,borderRadius:10,color:T.white,fontSize:13,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",padding:"10px 14px",outline:"none",resize:"none"}}/>
-      </Card>
-      <Card><Label>WhatsApp</Label><InputField placeholder={"N\u00BA tel\u00E9fono (ej: 34612345678)"} value={phone} onChange={e=>setPhone(e.target.value)}/><div style={{marginTop:10}}><Btn h={44} fs={11} icon={"\uD83D\uDCAC"} onClick={sendWA}>ENVIAR POR WHATSAPP</Btn></div></Card>
-      <Card><Label>Email</Label><InputField placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)}/><div style={{marginTop:8}}><InputField placeholder="Asunto" value={subject} onChange={e=>setSubject(e.target.value)}/></div><div style={{marginTop:10}}><Btn h={44} fs={11} icon={"\u2709"} onClick={sendEM}>ENVIAR POR EMAIL</Btn></div></Card>
-      <Btn h={48} fs={12} icon={"\uD83D\uDCE1"} onClick={()=>{if(!msg){toast("Escribe un mensaje");return}if(phone)sendWA();if(email)sendEM();if(!phone&&!email)toast("A\u00F1ade un contacto")}}>ENVIAR A TODOS</Btn>
-      <div style={{height:70}}/>
+// CUSTOMERS PANEL
+// ═══════════════════════════════════════════════════════════════
+const CustomersPanel = ({back,toast,clones}: {back: () => void; toast: (msg: string) => void; clones: Clone[]}) => {
+  const [customers,setCustomers]=useState<Customer[]>(LS.get("customers",[]) as Customer[]);
+  const [selectedClone,setSelectedClone]=useState<string|null>(null);
+  const [newCust,setNewCust]=useState({nombre:"",email:"",telefono:""});
+  const [filter,setFilter]=useState<"TODOS"|"ACTIVO"|"INACTIVO"|"SUSPENDIDO">("TODOS");
+
+  const addCustomer=()=>{
+    if(!newCust.nombre||!newCust.email||!selectedClone){toast("Completa todos los datos");return;}
+    const cust: Customer={
+      id:uid(),cloneId:selectedClone,nombre:newCust.nombre,email:newCust.email,telefono:newCust.telefono,
+      estado:"ACTIVO",createdAt:new Date().toISOString(),ultimaActividad:new Date().toISOString(),ingresos:0,notas:""
+    };
+    const updated=[...customers,cust];
+    setCustomers(updated);
+    LS.set("customers",updated);
+    setNewCust({nombre:"",email:"",telefono:""});
+    SFX.success();
+    toast("Cliente añadido");
+  };
+
+  const deleteCustomer=(id:string)=>{
+    const updated=customers.filter(c=>c.id!==id);
+    setCustomers(updated);
+    LS.set("customers",updated);
+    SFX.success();
+    toast("Cliente eliminado");
+  };
+
+  const updateCustomer=(id:string,changes:Partial<Customer>)=>{
+    const updated=customers.map(c=>c.id===id?{...c,...changes}:c);
+    setCustomers(updated);
+    LS.set("customers",updated);
+    SFX.click();
+  };
+
+  const filteredCustomers=selectedClone
+    ?customers.filter(c=>c.cloneId===selectedClone&&(filter==="TODOS"||c.estado===filter))
+    :[];
+
+  const stats={
+    total:customers.length,
+    activos:customers.filter(c=>c.estado==="ACTIVO").length,
+    inactivos:customers.filter(c=>c.estado==="INACTIVO").length,
+    suspendidos:customers.filter(c=>c.estado==="SUSPENDIDO").length,
+    ingresos:customers.reduce((s,c)=>s+(c.ingresos||0),0)
+  };
+
+  return (
+    <div style={{padding:"12px",display:"flex",flexDirection:"column",height:"100%",gap:10}}>
+      <Header title="CLIENTES" sub={`${stats.total} en total`} back={back} icon={"\uD83D\uDC65"} version={APP_VERSION}/>
+      
+      {/* STATS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <Card neon><HudStat label="Activos" value={stats.activos} color={T.green}/></Card>
+        <Card neon><HudStat label="Ingresos" value={`$${stats.ingresos}`} color={T.yellow}/></Card>
+      </div>
+
+      {/* CLONE SELECTOR */}
+      <div style={{background:T.bgCard,border:`1px solid ${T.border}44`,borderRadius:10,padding:10}}>
+        <div style={{fontSize:11,fontWeight:700,color:T.gray,letterSpacing:"0.08em",marginBottom:8}}>SELECCIONA CLON</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6}}>
+          {clones.map(c=>(
+            <button key={c.id} onClick={()=>setSelectedClone(c.id)} style={{
+              padding:8,borderRadius:8,background:selectedClone===c.id?`${T.neon}22`:`${T.border}11`,border:`1px solid ${selectedClone===c.id?T.neon:T.border}44`,
+              color:selectedClone===c.id?T.neon:T.gray,fontSize:10,fontWeight:700,cursor:"pointer",transition:"all 0.2s"
+            }}>{c.name}</button>
+          ))}
+        </div>
+      </div>
+
+      {selectedClone&&(
+        <>
+          {/* ADD CUSTOMER FORM */}
+          <div style={{background:T.bgCard,border:`1px solid ${T.border}44`,borderRadius:10,padding:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:T.gray,letterSpacing:"0.08em",marginBottom:8}}>NUEVO CLIENTE</div>
+            <input placeholder="Nombre" value={newCust.nombre} onChange={e=>setNewCust({...newCust,nombre:e.target.value})} 
+              style={{width:"100%",padding:8,borderRadius:6,background:T.dark,border:`1px solid ${T.border}33`,color:T.white,fontSize:12,marginBottom:6}}/>
+            <input placeholder="Email" type="email" value={newCust.email} onChange={e=>setNewCust({...newCust,email:e.target.value})} 
+              style={{width:"100%",padding:8,borderRadius:6,background:T.dark,border:`1px solid ${T.border}33`,color:T.white,fontSize:12,marginBottom:6}}/>
+            <input placeholder="Teléfono" value={newCust.telefono} onChange={e=>setNewCust({...newCust,telefono:e.target.value})} 
+              style={{width:"100%",padding:8,borderRadius:6,background:T.dark,border:`1px solid ${T.border}33`,color:T.white,fontSize:12,marginBottom:8}}/>
+            <Btn h={38} fs={11} success onClick={addCustomer}>AÑADIR CLIENTE</Btn>
+          </div>
+
+          {/* FILTERS */}
+          <div style={{display:"flex",gap:6}}>
+            {(["TODOS","ACTIVO","INACTIVO","SUSPENDIDO"] as const).map(f=>(
+              <button key={f} onClick={()=>setFilter(f)} style={{
+                flex:1,padding:6,borderRadius:6,fontSize:9,fontWeight:700,background:filter===f?T.neon:T.border,
+                color:filter===f?T.dark:T.white,cursor:"pointer",transition:"all 0.2s"
+              }}>{f}</button>
+            ))}
+          </div>
+
+          {/* CUSTOMERS LIST */}
+          <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:6}}>
+            {filteredCustomers.length===0?(
+              <div style={{textAlign:"center",color:T.gray,fontSize:12,marginTop:20}}>Sin clientes</div>
+            ):(
+              filteredCustomers.map(cust=>(
+                <Card key={cust.id} neon={cust.estado==="ACTIVO"}>
+                  <div style={{padding:10,display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"start"}}>
+                      <div>
+                        <div style={{fontSize:12,fontWeight:700,color:T.white}}>{cust.nombre}</div>
+                        <div style={{fontSize:9,color:T.gray}}>{cust.email}</div>
+                        {cust.telefono&&<div style={{fontSize:9,color:T.gray}}>{cust.telefono}</div>}
+                      </div>
+                      <div style={{display:"flex",gap:4}}>
+                        <select value={cust.estado} onChange={e=>updateCustomer(cust.id,{estado:e.target.value as any})}
+                          style={{padding:4,borderRadius:4,fontSize:9,fontWeight:700,background:T.dark,color:T.neon,border:`1px solid ${T.border}44`,cursor:"pointer"}}>
+                          <option>ACTIVO</option><option>INACTIVO</option><option>SUSPENDIDO</option>
+                        </select>
+                        <button onClick={()=>deleteCustomer(cust.id)} style={{
+                          padding:4,borderRadius:4,background:T.red+"22",color:T.red,fontSize:9,fontWeight:700,border:`1px solid ${T.red}44`,cursor:"pointer"
+                        }}>X</button>
+                      </div>
+                    </div>
+                    <div style={{fontSize:9,color:T.grayLight}}>{fmtDT(cust.ultimaActividad)}</div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </>
+      )}
     </div>
-  </Screen>;
+  );
 };
 
-// ═══════════════════════════════════════════════════════════════
 // COMPARTIR / QR SCREEN
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════��════════
 const ShareQR = ({back,toast}: {back: () => void; toast: (msg: string) => void}) => {
   const [url,setUrl]=useState(()=>LS.get("share_url",typeof window!=="undefined"?window.location.origin:"https://la-central-sigma.vercel.app") as string);
   useEffect(()=>{LS.set("share_url",url)},[url]);
@@ -1069,8 +1399,8 @@ const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renov
 
 
 // ═══════════════════════════════════════════════════════════════
-// MAIN APP
-// ══════════════════════════════════════════════════════════���════
+// MAIN APP v5
+// ═══════════════════════════════════════════════════════════════
 export default function JefazoOS() {
   const [scr, setScr] = useState("login");
   const [scrArg, setScrArg] = useState<string | null>(null);
@@ -1145,7 +1475,7 @@ export default function JefazoOS() {
   const syncAll = useCallback(() => { clones.forEach(c => onSync(c.id)); show("Todos sincronizados"); }, [clones, onSync, show]);
   const updateAll = useCallback(() => { clones.filter(c => semver.gt(c.vd, c.vi)).forEach(c => onUpdate(c.id)); show("Todos actualizados"); }, [clones, onUpdate, show]);
 
-  // ── BACKUP ───────────────────────────────────────────────
+  // ── BACKUP ──────────��────────────────────────────────────
   const onExport = useCallback(() => {
     const data = { clones, renovaciones, gs, adminSettings, comms: { phone: LS.get("comms_ph", "") as string, email: LS.get("comms_em", "") as string }, version: APP_VERSION, exported: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1186,10 +1516,11 @@ export default function JefazoOS() {
     <div style={{ width: "100vw", height: "100vh", maxWidth: 480, margin: "0 auto", background: T.bg, overflow: "hidden", position: "relative", borderLeft: `1px solid ${T.border}08`, borderRight: `1px solid ${T.border}08` }}>
       <GlobalCSS />
       <input type="file" ref={fileRef} accept=".json" style={{ display: "none" }} onChange={handleImport} />
+      {scr !== "login" && <DraggableLightning />}
       <div style={{ width: "100%", height: "100%", animation: dir === "in" ? "slideIn 0.24s cubic-bezier(0.25,0.46,0.45,0.94) both" : "slideOut 0.18s ease-in both" }}>
         {scr === "login" && <LoginScreen go={() => nav("eco")} />}
-        {scr === "eco" && <Ecosystem clones={clones} renovaciones={renovaciones} nav={nav} toast={show} onSync={onSync} onUpdate={onUpdate} />}
-        {scr === "ctrl" && <CloneCtrl clone={currentClone} back={() => nav("eco")} toast={show} updateClone={updateClone} onSync={onSync} onUpdate={onUpdate} />}
+        {scr === "eco" && <Ecosystem clones={clones} renovaciones={renovaciones} nav={nav} toast={show} onSync={onSync} onUpdate={onUpdate} onRemove={removeClone} />}
+        {scr === "ctrl" && <CloneCtrl clone={currentClone} back={() => nav("eco")} toast={show} updateClone={updateClone} onSync={onSync} onUpdate={onUpdate} onDelete={removeClone} />}
         {scr === "addclone" && <AddClone back={() => nav("eco")} toast={show} addClone={addClone} />}
         {scr === "market" && <Marketplace back={() => nav("eco")} toast={show} clones={clones} addClone={addClone} removeClone={removeClone} />}
         {scr === "cmd" && <CentroMando back={() => nav("eco")} toast={show} clones={clones} nav={nav} updateClone={updateClone} gs={gs} setGs={setGs} onExport={onExport} onImport={onImport} />}
@@ -1197,8 +1528,11 @@ export default function JefazoOS() {
         {scr === "msg" && <Comunicaciones back={() => nav("eco")} toast={show} />}
         {scr === "share" && <ShareQR back={() => nav("eco")} toast={show} />}
         {scr === "admin" && <AdminPanel back={() => nav("eco")} toast={show} clones={clones} gs={gs} activity={activity} adminSettings={adminSettings} setAdminSettings={setAdminSettings} />}
+        {scr === "admin-complete" && <AdminPanelComplete back={() => nav("eco")} toast={show} clones={clones} />}
         {scr === "insights" && <InsightsPanel back={() => nav("eco")} toast={show} clones={clones} />}
         {scr === "emergency" && <EmergencyScreen back={() => nav("eco")} toast={show} clones={clones} updateClone={updateClone} setGs={setGs} />}
+        {scr === "customers" && <CustomersPanel back={() => nav("eco")} toast={show} clones={clones} />}
+        {scr === "instances" && <ConnectedInstances back={() => nav("eco")} toast={show} nav={nav} />}
       </div>
       <Toast msg={toast.msg} on={toast.on} hide={hide} />
       {showQA && <QuickActions onSync={syncAll} onUpdate={updateAll} onExport={onExport} onImport={onImport} onEmergency={onEmergency} emergency={gs.emergency} />}
