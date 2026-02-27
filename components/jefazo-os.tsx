@@ -1399,8 +1399,8 @@ const CriticalAlert = ({renov,onResolve,onSnooze,onDismiss,toast}: {renov: Renov
 
 
 // ═══════════════════════════════════════════════════════════════
-// MAIN APP
-// ══════════════════════════════════════════════════════════���════
+// MAIN APP v5
+// ═══════════════════════════════════════════════════════════════
 export default function JefazoOS() {
   const [scr, setScr] = useState("login");
   const [scrArg, setScrArg] = useState<string | null>(null);
