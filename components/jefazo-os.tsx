@@ -2,9 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { AdminPanelComplete } from "./admin-panel-complete";
-import { MessagingPanel } from "./messaging-panel";
-import { ReportsPanel } from "./reports-panel";
-import { UpdatesPanel } from "./updates-panel";
 
 // ═══════════════════════════════════════════════════════════════
 // EL JEFAZO OS v5.1.0 — MASTER CONTROL PWA (Next.js Build)
@@ -1531,7 +1528,7 @@ export default function JefazoOS() {
         {scr === "msg" && <Comunicaciones back={() => nav("eco")} toast={show} />}
         {scr === "share" && <ShareQR back={() => nav("eco")} toast={show} />}
         {scr === "admin" && <AdminPanel back={() => nav("eco")} toast={show} clones={clones} gs={gs} activity={activity} adminSettings={adminSettings} setAdminSettings={setAdminSettings} />}
-        {scr === "admin-complete" && <AdminPanelComplete back={() => nav("eco")} toast={show} />}
+        {scr === "admin-complete" && <AdminPanelComplete back={() => nav("eco")} toast={show} clones={clones} />}
         {scr === "insights" && <InsightsPanel back={() => nav("eco")} toast={show} clones={clones} />}
         {scr === "emergency" && <EmergencyScreen back={() => nav("eco")} toast={show} clones={clones} updateClone={updateClone} setGs={setGs} />}
         {scr === "customers" && <CustomersPanel back={() => nav("eco")} toast={show} clones={clones} />}
@@ -1547,5 +1544,3 @@ export default function JefazoOS() {
     </div>
   );
 }
-
-export default JefazoOS;

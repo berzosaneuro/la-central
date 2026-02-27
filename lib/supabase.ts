@@ -1,11 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
-// Types
 export type Message = {
   id: string
   from_clone_id: string
@@ -24,7 +22,7 @@ export type Report = {
   instance_id: string
   report_type: 'daily' | 'weekly' | 'monthly' | 'custom'
   title: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   generated_at: string
   status: 'pending' | 'ready' | 'archived'
 }
@@ -48,21 +46,22 @@ export type CloneUpdate = {
   created_at: string
 }
 
-// Supabase Realtime subscriptions
 export const subscribeToMessages = (cloneId: string, callback: (msg: Message) => void) => {
   return supabase
     .channel(`messages-${cloneId}`)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `to_clone_id=eq.${cloneId}` }, (payload) => {
-      callback(payload.new as Message)
-    })
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'messages',
+      filter: `to_clone_id=eq.${cloneId}`
+    }, (payload) => callback(payload.new as Message))
     .subscribe()
 }
 
 export const subscribeToUpdates = (cloneId: string, callback: (upd: CloneUpdate) => void) => {
   return supabase
     .channel(`updates-${cloneId}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'clone_updates', filter: `clone_id=eq.${cloneId}` }, (payload) => {
-      callback(payload.new as CloneUpdate)
-    })
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'clone_updates',
+      filter: `clone_id=eq.${cloneId}`
+    }, (payload) => callback(payload.new as CloneUpdate))
     .subscribe()
 }
