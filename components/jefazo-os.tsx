@@ -382,7 +382,7 @@ const LoginScreen = ({go}: {go: () => void}) => {
   };
   const handleSubmit=(e: React.FormEvent)=>{e.preventDefault();doLogin();};
   return (
-    <div style={{width:"100%",height:"100%",background:"radial-gradient(ellipse at 50% 30%, #021840 0%, #000a1a 40%, #000308 70%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"1.5vh",overflow:"hidden",position:"relative",padding:"2vh 0"}}>
+    <div style={{width:"100%",height:"100%",background:"radial-gradient(ellipse at 50% 30%, #021840 0%, #000a1a 40%, #000308 70%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"1.5vh",overflow:"hidden",position:"fixed",inset:0,padding:"2vh 0"}}>
       <div style={{position:"absolute",inset:0,pointerEvents:"none",
         background:"radial-gradient(ellipse at 20% 10%, rgba(0,100,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 15%, rgba(0,150,255,0.06) 0%, transparent 40%)",
         zIndex:0}}/>
