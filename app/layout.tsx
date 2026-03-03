@@ -1,28 +1,29 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-serif" });
+
 export const metadata: Metadata = {
-  title: "EL JEFAZO OS",
-  description: "Master Control App — Gestion de clones y ecosistema",
-  manifest: "/manifest.json",
-  icons: {
-    icon: "/icon-192.png",
-    apple: "/icon-192.png",
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "JEFAZO",
+  title: "BerzosaNeuro — Neurociencia Aplicada",
+  description:
+    "Especialista en neurociencia aplicada al bienestar, el rendimiento y la transformación personal. Un enfoque riguroso, diferente y profundamente humano.",
+  openGraph: {
+    title: "BerzosaNeuro — Neurociencia Aplicada",
+    description:
+      "Especialista en neurociencia aplicada al bienestar, el rendimiento y la transformación personal.",
+    url: "https://webberzosaneuro.vercel.app",
+    siteName: "BerzosaNeuro",
+    type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000410",
+  themeColor: "#080808",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -31,10 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body style={{ margin: 0, padding: 0, height: "100vh", width: "100vw", overflow: "hidden" }}>
-        {children}
-      </body>
+    <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
+      <body className="font-sans bg-[#080808] text-[#f0ede8]">{children}</body>
     </html>
   );
 }
