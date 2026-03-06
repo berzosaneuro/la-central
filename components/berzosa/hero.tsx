@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Hero() {
   const lineRef = useRef<HTMLDivElement>(null);
@@ -44,9 +45,9 @@ export default function Hero() {
           </p>
 
           <h1 className="font-serif text-5xl md:text-7xl text-[#f0ede8] leading-tight mb-6 text-balance">
-            Donde la<br />
-            <span className="text-[#00c8b4]">ciencia</span><br />
-            te libera
+            Recupera tu<br />
+            <span className="text-[#00c8b4]">atención.</span><br />
+            Transforma tu mente.
           </h1>
 
           {/* animated line */}
@@ -59,21 +60,21 @@ export default function Hero() {
           </div>
 
           <p className="text-[#6b6b6b] text-lg leading-relaxed mb-10 max-w-md font-sans">
-            Especialista en neurociencia aplicada al bienestar, el rendimiento y la transformación personal. Un enfoque riguroso, diferente y profundamente humano.
+            Meditaciones guiadas, herramientas neurocientíficas y un método probado para salir del ruido mental y vivir con más presencia.
           </p>
 
           <div className="flex flex-wrap gap-4">
-            <a
-              href="#contacto"
+            <Link
+              href="/registro"
               className="px-8 py-4 bg-[#00c8b4] text-[#080808] text-sm tracking-widest uppercase font-sans font-medium hover:bg-[#f0ede8] transition-colors duration-300"
             >
-              Contactar
-            </a>
+              Comenzar Gratis
+            </Link>
             <a
-              href="#sobre-mi"
+              href="#metodo"
               className="px-8 py-4 border border-[#1e1e1e] text-[#6b6b6b] text-sm tracking-widest uppercase font-sans hover:border-[#f0ede8] hover:text-[#f0ede8] transition-colors duration-300"
             >
-              Conocerme
+              Ver el Método
             </a>
           </div>
         </div>

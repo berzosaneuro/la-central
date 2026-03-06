@@ -1,14 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { sendContact } from "@/app/actions/auth";
 
 export default function Contact() {
   const [form, setForm] = useState({ nombre: "", email: "", mensaje: "" });
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would integrate with an email service
+    setLoading(true);
+    setError("");
+    const data = new FormData();
+    data.append("name", form.nombre);
+    data.append("email", form.email);
+    data.append("message", form.mensaje);
+    const result = await sendContact(data);
+    setLoading(false);
+    if (result?.error) { setError(result.error); return; }
     setSent(true);
     setForm({ nombre: "", email: "", mensaje: "" });
   };
@@ -113,11 +124,15 @@ export default function Contact() {
                     placeholder="Cuéntame brevemente qué te trae aquí..."
                   />
                 </div>
+                {error && (
+                  <p className="text-red-400 text-xs font-sans">{error}</p>
+                )}
                 <button
                   type="submit"
-                  className="w-full bg-[#00c8b4] text-[#080808] py-4 text-sm tracking-widest uppercase font-sans font-medium hover:bg-[#f0ede8] transition-colors duration-300"
+                  disabled={loading}
+                  className="w-full bg-[#00c8b4] text-[#080808] py-4 text-sm tracking-widest uppercase font-sans font-medium hover:bg-[#f0ede8] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Enviar mensaje
+                  {loading ? "Enviando..." : "Enviar mensaje"}
                 </button>
               </form>
             )}

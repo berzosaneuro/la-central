@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 const navLinks = [
-  { label: "Inicio", href: "#inicio" },
+  { label: "El Método", href: "#metodo" },
+  { label: "Meditaciones", href: "#meditaciones" },
+  { label: "Curso 7 Días", href: "#curso" },
+  { label: "Planes", href: "#precios" },
   { label: "Sobre mí", href: "#sobre-mi" },
-  { label: "Especialidades", href: "#especialidades" },
   { label: "Contacto", href: "#contacto" },
 ];
 
@@ -31,23 +34,32 @@ export default function Navbar() {
         </a>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-sm tracking-widest uppercase text-[#6b6b6b] hover:text-[#f0ede8] transition-colors duration-300"
+              className="text-xs tracking-widest uppercase text-[#6b6b6b] hover:text-[#f0ede8] transition-colors duration-300"
             >
               {link.label}
             </a>
           ))}
-          <a
-            href="#contacto"
-            className="text-sm tracking-widest uppercase border border-[#00c8b4] text-[#00c8b4] px-5 py-2 hover:bg-[#00c8b4] hover:text-[#080808] transition-all duration-300"
-          >
-            Consulta
-          </a>
         </nav>
+
+        <div className="hidden md:flex items-center gap-4">
+          <Link
+            href="/login"
+            className="text-xs tracking-widest uppercase text-[#6b6b6b] hover:text-[#f0ede8] transition-colors duration-300"
+          >
+            Acceder
+          </Link>
+          <Link
+            href="/registro"
+            className="text-xs tracking-widest uppercase border border-[#00c8b4] text-[#00c8b4] px-5 py-2 hover:bg-[#00c8b4] hover:text-[#080808] transition-all duration-300"
+          >
+            Comenzar
+          </Link>
+        </div>
 
         {/* Mobile menu button */}
         <button
@@ -69,11 +81,20 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               onClick={() => setMenuOpen(false)}
-              className="text-base tracking-widest uppercase text-[#6b6b6b] hover:text-[#f0ede8] transition-colors"
+              className="text-sm tracking-widest uppercase text-[#6b6b6b] hover:text-[#f0ede8] transition-colors"
             >
               {link.label}
             </a>
           ))}
+          <div className="flex flex-col gap-3 pt-4 border-t border-[#1e1e1e]">
+            <Link href="/login" className="text-sm tracking-widest uppercase text-[#6b6b6b] hover:text-[#f0ede8] transition-colors">Acceder</Link>
+            <Link
+              href="/registro"
+              className="text-sm tracking-widest uppercase border border-[#00c8b4] text-[#00c8b4] px-5 py-3 text-center hover:bg-[#00c8b4] hover:text-[#080808] transition-all duration-300"
+            >
+              Comenzar Gratis
+            </Link>
+          </div>
         </div>
       )}
     </header>
