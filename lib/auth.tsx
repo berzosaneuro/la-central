@@ -3,14 +3,12 @@
 /**
  * lib/auth.tsx
  * ─────────────────────────────────────────────────────────────────
- * AuthContext global:
- *  - user      → objeto User de Supabase (null si no logueado)
- *  - session   → sesión activa completa
- *  - loading   → true mientras se resuelve la sesión inicial
- *  - signOut() → cierra sesión y redirige a /login
+ * AuthContext global con manejo explícito de supabase = null.
  *
- * Uso en cualquier componente 'use client':
- *   const { user, loading, signOut } = useAuth()
+ * Si Supabase no está configurado:
+ *  - user, session → null
+ *  - loading → false (no bloquea la UI indefinidamente)
+ *  - signOut → redirige a /login igualmente
  * ─────────────────────────────────────────────────────────────────
  */
 
@@ -23,27 +21,26 @@ import {
 } from 'react'
 import { useRouter } from 'next/navigation'
 import type { User, Session } from '@supabase/supabase-js'
-import { supabase } from './supabase'
+import { supabase, supabaseConfigured } from './supabase'
 
-/* ── Tipos ─────────────────────────────────────────────────────── */
 interface AuthCtx {
-  user:     User    | null
-  session:  Session | null
-  loading:  boolean
-  signOut:  () => Promise<void>
+  user:          User    | null
+  session:       Session | null
+  loading:       boolean
+  isConfigured:  boolean
+  signOut:       () => Promise<void>
 }
 
-/* ── Contexto ──────────────────────────────────────────────────── */
 const AuthContext = createContext<AuthCtx>({
-  user:    null,
-  session: null,
-  loading: true,
-  signOut: async () => {},
+  user:          null,
+  session:       null,
+  loading:       true,
+  isConfigured:  false,
+  signOut:       async () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
 
-/* ── Provider ──────────────────────────────────────────────────── */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router  = useRouter()
   const [user,    setUser]    = useState<User    | null>(null)
@@ -51,18 +48,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    /* 1. Sesión inicial (silenciosa) */
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    /* Supabase no configurado → resolver inmediatamente sin sesión */
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
+    /* Sesión inicial */
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setUser(data.session?.user ?? null)
       setLoading(false)
     })
 
-    /* 2. Escuchar cambios de sesión en tiempo real */
+    /* Cambios de sesión en tiempo real */
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
+      (_event, newSession) => {
+        setSession(newSession)
+        setUser(newSession?.user ?? null)
         setLoading(false)
       }
     )
@@ -70,14 +73,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  /* 3. Sign out */
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
     router.push('/login')
   }, [router])
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      session,
+      loading,
+      isConfigured: supabaseConfigured,
+      signOut,
+    }}>
       {children}
     </AuthContext.Provider>
   )

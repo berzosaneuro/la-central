@@ -1,38 +1,34 @@
 /**
  * lib/supabase.ts
  * ─────────────────────────────────────────────────────────────────
- * Cliente Supabase para uso en el BROWSER (componentes 'use client').
- * Singleton: se crea una sola vez por ciclo de vida de la pestaña.
+ * Cliente Supabase — singleton para uso en componentes 'use client'.
  *
- * Para uso en Server Components o Route Handlers usa createServerClient
- * de @supabase/ssr (ver middleware.ts como referencia).
+ * DISEÑO DE SEGURIDAD:
+ *  - Si las env vars no están definidas → supabase = null (no placeholder)
+ *  - supabaseConfigured indica si el cliente está operativo
+ *  - El middleware y el login comprueban supabaseConfigured antes de actuar
+ *  - Sin config → rutas protegidas bloqueadas (NO bypass)
  * ─────────────────────────────────────────────────────────────────
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL  || ''
-const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const url  = process.env.NEXT_PUBLIC_SUPABASE_URL  ?? ''
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-/* Aviso en consola (solo runtime, no rompe el build) */
-if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnon)) {
-  console.warn(
-    '[Supabase] Variables de entorno no configuradas. ' +
-    'Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY ' +
-    'en Vercel → Settings → Environment Variables.'
-  )
-}
+/** true sólo cuando ambas variables de entorno están presentes */
+export const supabaseConfigured = Boolean(url && anon)
 
-export const supabaseConfigured = Boolean(supabaseUrl && supabaseAnon)
-
-export const supabase = createClient(
-  supabaseUrl  || 'https://placeholder.supabase.co',
-  supabaseAnon || 'placeholder-anon-key',
-  {
-    auth: {
-      persistSession:    true,
-      autoRefreshToken:  true,
-      detectSessionInUrl: true,
-    },
-  }
-)
+/**
+ * Cliente real si Supabase está configurado, null en caso contrario.
+ * Siempre comprobar supabaseConfigured o `supabase !== null` antes de usar.
+ */
+export const supabase: SupabaseClient | null = supabaseConfigured
+  ? createClient(url, anon, {
+      auth: {
+        persistSession:     true,
+        autoRefreshToken:   true,
+        detectSessionInUrl: true,
+      },
+    })
+  : null
