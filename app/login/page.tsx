@@ -7,15 +7,20 @@
  * Diseño: fondo Bugatti full-screen + overlay oscuro + card glass.
  *
  * SEGURIDAD:
- *  - Si Supabase no está configurado → muestra error, bloquea login
- *  - Si hay sesión activa → middleware redirige antes de llegar aquí
- *  - Nunca expone detalles técnicos al usuario final
+ *  - Si Supabase configurado → formulario real
+ *  - Si NO configurado + NEXT_PUBLIC_DEMO_MODE=1 → acceso demo (preview only)
+ *  - Si NO configurado + sin demo mode → bloqueo total con mensaje de error
+ *  - Si hay sesión activa → proxy redirige antes de llegar aquí
+ *  - En producción: NEXT_PUBLIC_DEMO_MODE nunca se establece
  * ─────────────────────────────────────────────────────────────────
  */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
+
+// Set in preview/dev only. Never set in production.
+const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === '1'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -25,7 +30,7 @@ export default function LoginPage() {
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
 
-  /* ── Submit ─────────────────────────────────────────────────────── */
+  /* ── Real auth submit ────────────────────────────────────────── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -58,7 +63,15 @@ export default function LoginPage() {
     router.replace('/inicio')
   }
 
-  /* ── Render ──────────────────────────────────────────────────────── */
+  /* ── Demo mode entry (preview only) ─────────────────────────── */
+  const handleDemo = () => {
+    // Cookie read by proxy.ts — only honored when DEMO_MODE=1 is set
+    // server-side. In production the cookie is ignored unconditionally.
+    document.cookie = 'titan-demo=1; path=/; max-age=28800; SameSite=Lax'
+    router.replace('/inicio')
+  }
+
+  /* ── Render ──────────────────────────────────────────────────── */
   return (
     <div style={styles.root}>
 
@@ -76,19 +89,7 @@ export default function LoginPage() {
 
         <div style={styles.divider} />
 
-        {/* Error de configuración — Supabase no definido */}
-        {!supabaseConfigured && (
-          <div style={styles.configError}>
-            <span style={{ fontSize: 20, display: 'block', marginBottom: 8 }}>⚠</span>
-            <strong>Sistema no configurado</strong>
-            <p style={{ marginTop: 8, opacity: 0.85, fontWeight: 400 }}>
-              Las variables de entorno de Supabase no están definidas.
-              El acceso está bloqueado hasta que el administrador las configure.
-            </p>
-          </div>
-        )}
-
-        {/* Formulario — solo si Supabase está operativo */}
+        {/* ── Case 1: Supabase configured → real form ── */}
         {supabaseConfigured && (
           <form onSubmit={handleSubmit} style={styles.form} noValidate>
 
@@ -143,6 +144,36 @@ export default function LoginPage() {
               ) : 'ENTRAR'}
             </button>
           </form>
+        )}
+
+        {/* ── Case 2: Not configured + demo mode available ── */}
+        {!supabaseConfigured && demoMode && (
+          <div style={styles.demoBlock}>
+            <div style={styles.demoBadge}>PREVIEW</div>
+            <p style={styles.demoText}>
+              Supabase no está configurado.<br />
+              Acceso de demostración disponible.
+            </p>
+            <button style={styles.demoBtn} onClick={handleDemo}>
+              ENTRAR EN MODO DEMO
+            </button>
+            <p style={styles.demoWarning}>
+              Solo disponible en entornos de preview.<br />
+              Producción requiere autenticación real.
+            </p>
+          </div>
+        )}
+
+        {/* ── Case 3: Not configured + no demo mode → hard block ── */}
+        {!supabaseConfigured && !demoMode && (
+          <div style={styles.configError}>
+            <span style={{ fontSize: 20, display: 'block', marginBottom: 8 }}>⚠</span>
+            <strong>Sistema no configurado</strong>
+            <p style={{ marginTop: 8, opacity: 0.85, fontWeight: 400 }}>
+              Las variables de entorno de Supabase no están definidas.
+              El acceso está bloqueado hasta que el administrador las configure.
+            </p>
+          </div>
         )}
 
         <div style={styles.footer}>
@@ -209,6 +240,36 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.3px', padding: '16px', textAlign: 'center',
     lineHeight: 1.6, marginBottom: '8px',
   },
+  /* Demo mode styles */
+  demoBlock: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
+    background: 'rgba(255, 200, 0, 0.05)', border: '1px solid rgba(255, 200, 0, 0.2)',
+    borderRadius: '3px', padding: '24px 20px',
+  },
+  demoBadge: {
+    fontFamily: "'Orbitron', sans-serif", fontSize: '10px', fontWeight: 700,
+    letterSpacing: '4px', color: '#FFB800',
+    background: 'rgba(255, 184, 0, 0.12)', border: '1px solid rgba(255, 184, 0, 0.3)',
+    borderRadius: '2px', padding: '4px 10px',
+  },
+  demoText: {
+    color: '#AABBC8', fontSize: '13px', textAlign: 'center',
+    lineHeight: 1.7, margin: 0, fontWeight: 500,
+  },
+  demoBtn: {
+    width: '100%',
+    background: 'linear-gradient(135deg, rgba(255, 184, 0, 0.15) 0%, rgba(255, 184, 0, 0.08) 100%)',
+    border: '1px solid rgba(255, 184, 0, 0.4)', borderRadius: '3px',
+    color: '#FFB800', cursor: 'pointer',
+    fontFamily: "'Orbitron', sans-serif", fontSize: '12px', fontWeight: 700,
+    height: '48px', letterSpacing: '2px', transition: 'all 150ms',
+    boxShadow: '0 0 16px rgba(255, 184, 0, 0.1)',
+  },
+  demoWarning: {
+    color: 'rgba(136, 153, 166, 0.55)', fontSize: '10px', textAlign: 'center',
+    lineHeight: 1.6, margin: 0, letterSpacing: '0.3px',
+  },
+  /* Form styles */
   form: { display: 'flex', flexDirection: 'column', gap: '20px' },
   fieldWrap: { display: 'flex', flexDirection: 'column', gap: '8px' },
   label: { fontSize: '11px', fontWeight: 700, letterSpacing: '2px', color: '#8899A6' },
