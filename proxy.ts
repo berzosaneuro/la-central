@@ -5,8 +5,16 @@ import type { NextRequest } from 'next/server'
 // Every route is private except /login
 const PUBLIC_ROUTES = ['/login']
 
+// Routes blocked for demo users. Mirrors lib/demo.ts (duplicated here
+// because proxy.ts runs at the edge and cannot import from lib/).
+const DEMO_RESTRICTED = ['/creador', '/oficina']
+
 function isPublic(pathname: string): boolean {
   return PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))
+}
+
+function isDemoRestricted(pathname: string): boolean {
+  return DEMO_RESTRICTED.some(r => pathname === r || pathname.startsWith(r + '/'))
 }
 
 export async function proxy(request: NextRequest) {
@@ -35,7 +43,7 @@ export async function proxy(request: NextRequest) {
       return res
     }
 
-    // Supabase not configured → show /login with error message
+    // Supabase not configured → show /login with its own UI
     return NextResponse.next({ request })
   }
 
@@ -43,16 +51,20 @@ export async function proxy(request: NextRequest) {
 
   // ── Demo mode (preview / dev ONLY) ──────────────────────────────
   // Requires DEMO_MODE=1 server env var. Never set in production.
-  // Cookie must be explicitly issued by the login page — not guessable
-  // because without DEMO_MODE=1 on the server, the cookie is ignored
-  // regardless of environment.
+  // Without DEMO_MODE=1 on the server, the cookie is unconditionally
+  // ignored — crafting it in production has zero effect.
   if (
     process.env.DEMO_MODE === '1' &&
     request.cookies.get('titan-demo')?.value === '1'
   ) {
+    // Demo user cannot access restricted routes
+    if (isDemoRestricted(pathname)) {
+      return NextResponse.redirect(new URL('/inicio', request.url))
+    }
     return NextResponse.next({ request })
   }
 
+  // ── Supabase auth ────────────────────────────────────────────────
   const url  = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
