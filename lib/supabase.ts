@@ -11,24 +11,28 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL  || ''
+const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-if (!supabaseUrl || !supabaseAnon) {
-  throw new Error(
-    '[Supabase] Faltan variables de entorno.\n' +
-    'Asegúrate de definir NEXT_PUBLIC_SUPABASE_URL y ' +
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local'
+/* Aviso en consola (solo runtime, no rompe el build) */
+if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnon)) {
+  console.warn(
+    '[Supabase] Variables de entorno no configuradas. ' +
+    'Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY ' +
+    'en Vercel → Settings → Environment Variables.'
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnon, {
-  auth: {
-    // Persiste la sesión en localStorage automáticamente
-    persistSession: true,
-    // Refresca el token antes de que expire
-    autoRefreshToken: true,
-    // Detecta el callback OAuth en la URL (por si se añade OAuth después)
-    detectSessionInUrl: true,
-  },
-})
+export const supabaseConfigured = Boolean(supabaseUrl && supabaseAnon)
+
+export const supabase = createClient(
+  supabaseUrl  || 'https://placeholder.supabase.co',
+  supabaseAnon || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession:    true,
+      autoRefreshToken:  true,
+      detectSessionInUrl: true,
+    },
+  }
+)
