@@ -12,8 +12,6 @@ function isPublic(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  console.log('[TITAN-PROXY]', request.method, pathname)
-
   // Always allow public routes through (they handle their own UI)
   if (isPublic(pathname)) {
     // If Supabase is configured and user has a session, bounce them to /inicio
