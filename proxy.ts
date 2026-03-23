@@ -70,7 +70,6 @@ export async function proxy(request: NextRequest) {
 
   // Supabase not configured → lock everything, redirect to /login
   if (!url || !anon) {
-    console.error('[SECURITY] Supabase env vars missing. Blocking access to:', pathname)
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
