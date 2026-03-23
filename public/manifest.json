@@ -1,0 +1,43 @@
+{
+  "name": "TITAN OS v3.0",
+  "short_name": "TITAN OS",
+  "description": "Sistema de gestión profesional para coaches de élite",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "categories": ["productivity", "health", "fitness"],
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Atletas",
+      "short_name": "Atletas",
+      "description": "Ver lista de atletas",
+      "url": "/atletas",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Creador",
+      "short_name": "Creador",
+      "description": "Crear planes de dieta y entrenamiento",
+      "url": "/creador",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
